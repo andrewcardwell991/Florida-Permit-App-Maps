@@ -1,0 +1,10 @@
+{
+  "title": "Florida Permit Intelligence Beta Map - seminole_output_20260421_172539",
+  "county": "Seminole",
+  "map_standard_version": "2026-04-21-v1",
+  "source_output_csv": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\manual_seminole_share_test_20260421\\seminole_output_20260421_172539.csv",
+  "source_output_html": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\manual_seminole_share_test_20260421\\seminole_map_20260421_172539.html",
+  "rows_in_output": 22,
+  "markers_shown": 22,
+  "generated_at_utc": 1776807469.3985844
+}

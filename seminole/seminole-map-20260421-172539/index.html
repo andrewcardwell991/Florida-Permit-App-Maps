@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="map-standard-version" content="2026-04-21-v1" />
+  <title>Florida Permit Intelligence Beta Map - seminole_output_20260421_172539</title>
+  <link rel="stylesheet" href="assets/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="assets/markercluster/MarkerCluster.css" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #04090b;
+      --surface: rgba(8, 14, 18, 0.92);
+      --surface-solid: #071117;
+      --surface-strong: rgba(8, 14, 18, 0.97);
+      --border: rgba(99, 179, 237, 0.18);
+      --text: #edf7f3;
+      --muted: #a4bbc1;
+      --accent: #7ee7b5;
+      --accent-strong: #2fd68a;
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+    button, input, select { font: inherit; }
+    .app {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #020608;
+    }
+    #map {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: #03070a;
+    }
+    .topbar {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 900;
+      display: grid;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .glass {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      pointer-events: auto;
+    }
+    .hero {
+      padding: 14px 16px;
+    }
+    .eyebrow {
+      margin: 0 0 4px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.25;
+    }
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .stat {
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .stat .label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .stat .value {
+      display: block;
+      font-size: 19px;
+      font-weight: 800;
+    }
+    .sheet-toggle {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      z-index: 920;
+      border: none;
+      border-radius: 999px;
+      background: rgba(7, 17, 23, 0.94);
+      color: var(--text);
+      padding: 12px 16px;
+      font-weight: 700;
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28);
+      border: 1px solid var(--border);
+    }
+    .sheet {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 910;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 0;
+      max-height: min(70vh, 720px);
+      min-height: 96px;
+      border-radius: 26px 26px 0 0;
+      overflow: hidden;
+      transform: translateY(calc(100% - 88px));
+      transition: transform 0.24s ease;
+    }
+    .sheet.open {
+      transform: translateY(0);
+    }
+    .sheet-header {
+      padding: 10px 18px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .sheet-handle {
+      width: 54px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.2);
+      margin: 8px auto 10px;
+    }
+    .sheet-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .sheet-title strong {
+      font-size: 15px;
+    }
+    .sheet-copy {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .summary-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .summary-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .summary-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+    }
+    .list-shell {
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 0;
+    }
+    .list-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .record-list {
+      overflow-y: auto;
+      padding: 12px 14px 28px;
+      display: grid;
+      gap: 10px;
+    }
+    .record {
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 12px;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+    }
+    .record.active {
+      border-color: rgba(126, 231, 181, 0.56);
+      box-shadow: 0 0 0 1px rgba(126, 231, 181, 0.42), 0 10px 24px rgba(0, 0, 0, 0.28);
+    }
+    .record button {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+      padding: 0;
+      cursor: pointer;
+    }
+    .record-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #0b1114;
+      background: #ffffff;
+    }
+    .record-title {
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.35;
+      margin-bottom: 8px;
+    }
+    .record-age {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+    }
+    .record-meta {
+      display: grid;
+      gap: 4px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .record-note {
+      margin-top: 10px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #fcd34d;
+    }
+    .record-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .record-actions a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .record-actions a:hover {
+      text-decoration: underline;
+    }
+    .map-pin {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      font-weight: 900;
+      line-height: 1;
+      color: var(--marker-text);
+      background: var(--marker-bg);
+      border: 2px solid var(--marker-border);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.82), 0 4px 12px rgba(0, 0, 0, 0.18);
+    }
+    .map-pin.size-tiny {
+      width: 10px;
+      height: 10px;
+      font-size: 9px;
+      border-width: 1.5px;
+    }
+    .map-pin.size-small {
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+    }
+    .map-pin.size-medium {
+      width: 22px;
+      height: 22px;
+      font-size: 13px;
+    }
+    .map-pin.size-large {
+      width: 30px;
+      height: 30px;
+      font-size: 15px;
+    }
+    .leaflet-popup-content-wrapper {
+      border-radius: 18px;
+      background: rgba(7, 17, 23, 0.95);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .leaflet-popup-content {
+      margin: 14px 16px;
+      min-width: min(240px, 72vw);
+      line-height: 1.45;
+      font-size: 13px;
+    }
+    .leaflet-popup-tip {
+      background: rgba(7, 17, 23, 0.95);
+    }
+    .popup-chip {
+      display: inline-flex;
+      align-items: center;
+      margin-bottom: 8px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      border: 1px solid;
+    }
+    .popup-title {
+      font-weight: 800;
+      margin-bottom: 8px;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+    .popup-row {
+      margin-top: 4px;
+      word-break: break-word;
+    }
+    .popup-link {
+      display: inline-block;
+      margin-top: 10px;
+      color: var(--accent);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .popup-link:hover {
+      text-decoration: underline;
+    }
+    .cluster-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      color: #ffffff;
+      font-weight: 800;
+      border: 2px solid rgba(255, 255, 255, 0.78);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      background: linear-gradient(180deg, #1f2937 0%, #0f172a 100%);
+    }
+    .cluster-icon.priority {
+      background: linear-gradient(180deg, #dc2626 0%, #991b1b 100%);
+    }
+    .loading-state, .empty-state {
+      padding: 18px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+    @media (min-width: 1025px) {
+      .topbar {
+        right: auto;
+        width: 390px;
+      }
+      .sheet-toggle {
+        display: none;
+      }
+      .sheet {
+        top: 12px;
+        bottom: 12px;
+        left: 12px;
+        width: 390px;
+        right: auto;
+        max-height: none;
+        min-height: 0;
+        transform: none;
+        border-radius: 24px;
+      }
+      #map {
+        left: 414px;
+        width: calc(100% - 414px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div id="map"></div>
+    <div class="topbar">
+      <section class="glass hero">
+        <p class="eyebrow">Florida Permit Intelligence Beta</p>
+        <h1>Florida Permit Intelligence Beta Map - seminole_output_20260421_172539</h1>
+        <p class="subtitle">Marker priority is driven by roof age so older roofs stand out first. Click any address in the left list to jump straight to that property and open the full map details.</p>
+      </section>
+      <section class="glass" style="padding: 10px 12px;">
+        <div class="stats">
+          <div class="stat"><span class="label">Rows in output</span><span class="value">22</span></div>
+          <div class="stat"><span class="label">Markers shown</span><span class="value">22</span></div>
+          <div class="stat"><span class="label">21+ years</span><span class="value">1</span></div>
+          <div class="stat"><span class="label">16-20 years</span><span class="value">0</span></div>
+        </div>
+      </section>
+    </div>
+
+    <button id="sheet-toggle" class="sheet-toggle" type="button">Show addresses</button>
+
+    <section id="sheet" class="sheet glass open">
+      <div class="sheet-header">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">
+          <strong>Property list</strong>
+          <span style="font-size:12px; color:var(--muted);">Map standard 2026-04-21-v1</span>
+        </div>
+        <div class="sheet-copy">
+          Mobile-friendly public map link. Tap any property to center the map and open its details. Error rows stay counted but do not plot as pins.
+        </div>
+        <div class="summary-row">
+          <span class="summary-pill"><span class="summary-dot" style="background:#dc2626;"></span>21+ 1</span>
+          <span class="summary-pill"><span class="summary-dot" style="background:#fb923c;"></span>16-20 0</span>
+          <span class="summary-pill"><span class="summary-dot" style="background:#facc15;"></span>11-15 3</span>
+          <span class="summary-pill"><span class="summary-dot" style="background:#dbe4ee;"></span>0-10 17</span>
+          <span class="summary-pill"><span class="summary-dot" style="background:#1f2937;"></span>No data 1</span>
+        </div>
+      </div>
+      <div class="list-shell">
+        <div class="list-toolbar">
+          <span id="list-status">Loading records...</span>
+          <span>0 duplicate row(s) hidden</span>
+        </div>
+        <div id="record-list" class="record-list">
+          <div class="loading-state">Loading map records…</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="assets/leaflet/leaflet.js"></script>
+  <script src="assets/markercluster/leaflet.markercluster.js"></script>
+  <script>
+    const MAP_STANDARD_VERSION = "2026-04-21-v1";
+    const MAP_SUMMARY = {"county": "Seminole", "rows_in_output": 22, "markers_shown": 22, "age_21_plus": 1, "age_16_20": 0, "age_11_15": 3, "age_0_10": 17, "age_unknown": 0, "no_data": 1, "errors": 0, "duplicate_rows_hidden": 0};
+    const DEFAULT_CENTER = [28.35, -81.45];
+    const sheet = document.getElementById('sheet');
+    const sheetToggle = document.getElementById('sheet-toggle');
+    const recordList = document.getElementById('record-list');
+    const listStatus = document.getElementById('list-status');
+
+    const MARKER_STYLES = {
+      age_21_plus: { label: '21+ years', bg: '#dc2626', border: '#991b1b', text: '#ffffff', symbol: '❤', size: 30, outcome: '#dc2626' },
+      age_16_20: { label: '16-20 years', bg: '#fb923c', border: '#ea580c', text: '#431407', symbol: '', size: 22, outcome: '#fb923c' },
+      age_11_15: { label: '11-15 years', bg: '#facc15', border: '#ca8a04', text: '#422006', symbol: '', size: 20, outcome: '#facc15' },
+      age_0_10: { label: '0-10 years', bg: '#dbe4ee', border: '#64748b', text: '#334155', symbol: '', size: 10, outcome: '#dbe4ee' },
+      age_unknown: { label: 'Age not calculated', bg: '#e2e8f0', border: '#64748b', text: '#334155', symbol: '!', size: 14, outcome: '#cbd5e1' },
+      no_data: { label: 'No data', bg: '#1f2937', border: '#0f172a', text: '#ffffff', symbol: '?', size: 14, outcome: '#1f2937' },
+    };
+    const LOW_PRIORITY_GROUPS = new Set(['age_0_10', 'age_unknown', 'no_data']);
+    let records = [];
+    let renderCursor = 0;
+    const recordCardById = new Map();
+    const markerById = new Map();
+    const visibleBounds = [];
+
+    function escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function markerStyle(record) {
+      return MARKER_STYLES[record.marker_group] || MARKER_STYLES.age_0_10;
+    }
+
+    function sizeClass(size) {
+      if (size <= 14) return 'size-tiny';
+      if (size >= 30) return 'size-large';
+      if (size >= 22) return 'size-medium';
+      return 'size-small';
+    }
+
+    function buildMarkerIcon(record) {
+      const style = markerStyle(record);
+      const symbol = style.symbol ? `<span>${escapeHtml(style.symbol)}</span>` : '';
+      const cls = sizeClass(style.size);
+      const html = `<div class="map-pin ${cls}" style="--marker-bg:${style.bg}; --marker-border:${style.border}; --marker-text:${style.text};">${symbol}</div>`;
+      return L.divIcon({
+        className: 'custom-map-marker',
+        html,
+        iconSize: [style.size, style.size],
+        iconAnchor: [style.size / 2, style.size / 2],
+        popupAnchor: [0, -Math.max(12, style.size / 2)],
+      });
+    }
+
+    function buildPopup(record) {
+      const style = markerStyle(record);
+      const accuracyLine = record.coord_accuracy && record.coord_accuracy !== 'parcel/input'
+        ? `<div class="popup-row" style="color:#facc15;"><b>Map accuracy:</b> ${escapeHtml(record.coord_accuracy)}${record.coord_note ? ' | ' + escapeHtml(record.coord_note) : ''}</div>`
+        : '';
+      return `
+        <div>
+          <div class="popup-chip" style="background:${style.bg}; border-color:${style.border}; color:${style.text};">${escapeHtml(style.label)}</div>
+          <div class="popup-title">${escapeHtml(record.address || 'Address unavailable')}</div>
+          <div class="popup-row"><b>Parcel #:</b> ${escapeHtml(record.parcel || '-')}</div>
+          <div class="popup-row"><b>Owner:</b> ${escapeHtml(record.owner || '-')}</div>
+          <div class="popup-row"><b>Roof Date:</b> ${escapeHtml(record.roof_date || '-')}</div>
+          <div class="popup-row"><b>Roof Type:</b> ${escapeHtml(record.roof_type || '-')}</div>
+          <div class="popup-row"><b>Roof Age:</b> ${escapeHtml(record.roof_age_display || '-')}</div>
+          ${accuracyLine}
+          <a class="popup-link" href="${record.maps_url}" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+        </div>
+      `;
+    }
+
+    function setActiveRecord(recordId) {
+      recordCardById.forEach((card, id) => card.classList.toggle('active', id === recordId));
+    }
+
+    function focusRecord(recordId) {
+      const marker = markerById.get(recordId);
+      if (!marker) return false;
+      const record = records.find((item) => item.id === recordId);
+      setActiveRecord(recordId);
+      if (window.innerWidth < 1025) {
+        sheet.classList.remove('open');
+        sheetToggle.textContent = 'Show addresses';
+      }
+      map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 17), { animate: true, duration: 0.25 });
+      marker.bindPopup(buildPopup(record)).openPopup();
+      return true;
+    }
+
+    function recordCard(record) {
+      const style = markerStyle(record);
+      const card = document.createElement('article');
+      card.className = 'record';
+      const note = record.coord_accuracy && record.coord_accuracy !== 'parcel/input'
+        ? `<div class="record-note">Map location: ${escapeHtml(record.coord_accuracy)}${record.coord_note ? ' | ' + escapeHtml(record.coord_note) : ''}</div>`
+        : '';
+      card.innerHTML = `
+        <button type="button">
+          <div class="record-head">
+            <span class="badge" style="background:${style.bg}; color:${style.text};">${escapeHtml(style.label)}</span>
+            <span style="font-size:12px; color:var(--muted);">${escapeHtml(record.roof_type || '')}</span>
+          </div>
+          <div class="record-title">${escapeHtml(record.address || record.parcel || 'Address unavailable')}</div>
+          <div class="record-age">${escapeHtml(record.roof_age_display || '-')}</div>
+          <div class="record-meta">
+            <div>Parcel: ${escapeHtml(record.parcel || '-')}</div>
+            <div>Owner: ${escapeHtml(record.owner || '-')}</div>
+            <div>Roof date: ${escapeHtml(record.roof_date || '-')}</div>
+          </div>
+          ${note}
+        </button>
+        <div class="record-actions">
+          <a href="${record.maps_url}" target="_blank" rel="noopener noreferrer">Google Maps</a>
+        </div>
+      `;
+      card.querySelector('button').addEventListener('click', () => focusRecord(record.id));
+      recordCardById.set(record.id, card);
+      return card;
+    }
+
+    function renderNextBatch() {
+      const next = records.slice(renderCursor, renderCursor + 40);
+      next.forEach((record) => recordList.appendChild(recordCard(record)));
+      renderCursor += next.length;
+      if (renderCursor >= records.length) {
+        listStatus.textContent = `${records.length} record(s) ready`;
+      } else {
+        listStatus.textContent = `${renderCursor} of ${records.length} record(s) shown`;
+      }
+    }
+
+    function clusterIcon(children) {
+      let priority = false;
+      for (const child of children) {
+        if (!LOW_PRIORITY_GROUPS.has(child.options.recordGroup || '')) {
+          priority = true;
+          break;
+        }
+      }
+      const cls = priority ? 'cluster-icon priority' : 'cluster-icon';
+      return L.divIcon({
+        html: `<div class="${cls}">${children.length}</div>`,
+        className: 'share-cluster',
+        iconSize: [42, 42],
+      });
+    }
+
+    const map = L.map('map', {
+      preferCanvas: true,
+      zoomAnimation: window.innerWidth >= 768,
+      fadeAnimation: false,
+      markerZoomAnimation: false,
+      zoomControl: true,
+    }).setView(DEFAULT_CENTER, 10);
+
+    const imageryOptions = {
+      maxZoom: 20,
+      maxNativeZoom: 19,
+      attribution: 'Tiles © Esri',
+      keepBuffer: window.innerWidth < 1025 ? 2 : 3,
+      updateWhenIdle: true,
+      updateWhenZooming: false,
+    };
+    const referenceOptions = {
+      maxZoom: 20,
+      maxNativeZoom: 19,
+      attribution: 'Roads © Esri',
+      keepBuffer: window.innerWidth < 1025 ? 2 : 3,
+      updateWhenIdle: true,
+      updateWhenZooming: false,
+      opacity: 0.9,
+    };
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', imageryOptions).addTo(map);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', referenceOptions).addTo(map);
+
+    const totalPlotted = MAP_SUMMARY.markers_shown;
+    const clusterAllMarkers = totalPlotted > 150;
+    const clusterLowPriorityOnly = totalPlotted > 500;
+    const clusterLayer = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      spiderfyOnMaxZoom: true,
+      removeOutsideVisibleBounds: true,
+      chunkedLoading: true,
+      maxClusterRadius: 42,
+      disableClusteringAtZoom: clusterLowPriorityOnly ? 17 : 16,
+      iconCreateFunction: (cluster) => clusterIcon(cluster.getAllChildMarkers()),
+    });
+    const directLayer = L.layerGroup().addTo(map);
+
+    function addMarker(record) {
+      if (record.hide_marker || !Number.isFinite(record.map_lat) || !Number.isFinite(record.map_lon)) return;
+      const marker = L.marker([record.map_lat, record.map_lon], {
+        icon: buildMarkerIcon(record),
+        keyboard: false,
+        riseOnHover: false,
+        recordGroup: record.marker_group || '',
+        zIndexOffset: LOW_PRIORITY_GROUPS.has(record.marker_group || '') ? 0 : 200,
+      });
+      marker.on('click', () => {
+        setActiveRecord(record.id);
+        marker.bindPopup(buildPopup(record)).openPopup();
+      });
+      marker.on('popupopen', () => setActiveRecord(record.id));
+      markerById.set(record.id, marker);
+      visibleBounds.push([record.map_lat, record.map_lon]);
+      if ((clusterAllMarkers && !clusterLowPriorityOnly) || (clusterLowPriorityOnly && LOW_PRIORITY_GROUPS.has(record.marker_group || ''))) {
+        clusterLayer.addLayer(marker);
+      } else {
+        directLayer.addLayer(marker);
+      }
+    }
+
+    sheetToggle.addEventListener('click', () => {
+      const open = sheet.classList.toggle('open');
+      sheetToggle.textContent = open ? 'Hide addresses' : 'Show addresses';
+    });
+
+    recordList.addEventListener('scroll', () => {
+      if (renderCursor >= records.length) return;
+      if ((recordList.scrollTop + recordList.clientHeight) >= (recordList.scrollHeight - 240)) {
+        renderNextBatch();
+      }
+    });
+
+    fetch('records.json', { cache: 'no-store' })
+      .then((response) => response.json())
+      .then((payload) => {
+        records = Array.isArray(payload.records) ? payload.records : [];
+        recordList.innerHTML = '';
+        records.forEach(addMarker);
+        if (clusterLayer.getLayers().length) {
+          clusterLayer.addTo(map);
+        }
+        if (visibleBounds.length === 1) {
+          map.setView(visibleBounds[0], 17);
+        } else if (visibleBounds.length > 1) {
+          map.fitBounds(visibleBounds, { padding: [28, 28] });
+        }
+        if (!records.length) {
+          recordList.innerHTML = '<div class="empty-state">No mappable records were found in this shared map.</div>';
+          listStatus.textContent = 'No records found';
+          return;
+        }
+        renderNextBatch();
+      })
+      .catch((error) => {
+        console.error(error);
+        recordList.innerHTML = '<div class="empty-state">This public map could not load its record list right now.</div>';
+        listStatus.textContent = 'Record load failed';
+      });
+  </script>
+</body>
+</html>
