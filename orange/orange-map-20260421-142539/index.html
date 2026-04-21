@@ -20,6 +20,8 @@
       --accent: #7ee7b5;
       --accent-strong: #2fd68a;
       --shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+      --desktop-sidebar-width: 390px;
+      --desktop-sheet-top: 324px;
     }
     * { box-sizing: border-box; }
     html {
@@ -498,8 +500,10 @@
     }
     @media (min-width: 1025px) {
       .topbar {
+        top: 12px;
+        left: 12px;
         right: auto;
-        width: 390px;
+        width: var(--desktop-sidebar-width);
         justify-items: stretch;
       }
       .topbar-toggle {
@@ -515,10 +519,10 @@
         display: none;
       }
       .sheet {
-        top: 12px;
+        top: var(--desktop-sheet-top);
         bottom: 12px;
         left: 12px;
-        width: 390px;
+        width: var(--desktop-sidebar-width);
         right: auto;
         max-height: none;
         min-height: 0;
@@ -526,8 +530,8 @@
         border-radius: 24px;
       }
       #map {
-        left: 414px;
-        width: calc(100% - 414px);
+        left: calc(var(--desktop-sidebar-width) + 24px);
+        width: calc(100% - var(--desktop-sidebar-width) - 24px);
       }
     }
     @media (max-width: 640px) and (orientation: portrait) {
@@ -698,11 +702,22 @@
       return window.innerWidth >= 1025;
     }
 
+    function updateDesktopLayout() {
+      if (!isDesktopLayout()) {
+        document.documentElement.style.removeProperty('--desktop-sheet-top');
+        return;
+      }
+      const topbarHeight = Math.ceil(topbar.offsetHeight || 0);
+      const sheetTop = Math.max(168, topbarHeight + 24);
+      document.documentElement.style.setProperty('--desktop-sheet-top', `${sheetTop}px`);
+    }
+
     function syncTopbarState() {
       if (isDesktopLayout()) {
         topbar.classList.add('open');
         topbarToggle.setAttribute('aria-expanded', 'true');
         topbarToggle.textContent = 'Map details';
+        updateDesktopLayout();
         return;
       }
       const open = topbar.classList.contains('open');
@@ -917,12 +932,15 @@
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', referenceOptions).addTo(map);
 
     const totalPlotted = MAP_SUMMARY.markers_shown;
-    const clusterAllMarkers = totalPlotted > 150;
-    const clusterLowPriorityOnly = totalPlotted > 500;
+    const mobileClustering = !isDesktopLayout();
+    const clusterAllMarkers = mobileClustering && totalPlotted > 950;
+    const clusterLowPriorityOnly = mobileClustering && totalPlotted > 280;
     const clusterLayer = L.markerClusterGroup({
+      animate: false,
+      animateAddingMarkers: false,
       showCoverageOnHover: false,
       spiderfyOnMaxZoom: true,
-      removeOutsideVisibleBounds: true,
+      removeOutsideVisibleBounds: false,
       chunkedLoading: true,
       maxClusterRadius: 42,
       disableClusteringAtZoom: clusterLowPriorityOnly ? 17 : 16,
@@ -1011,6 +1029,7 @@
         topbar.classList.add('open');
         sheet.classList.add('open');
       }
+      updateDesktopLayout();
       syncTopbarState();
       syncSheetState();
     });
@@ -1037,6 +1056,7 @@
         }
         renderFilterControls();
         applyActiveFilter(true);
+        updateDesktopLayout();
         syncTopbarState();
         syncSheetState();
       })
