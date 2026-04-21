@@ -1,0 +1,10 @@
+{
+  "title": "Florida Permit Intelligence Beta Map - volusia_output_20260419_190747",
+  "county": "Volusia",
+  "map_standard_version": "2026-04-21-v1",
+  "source_output_csv": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\volusia_output_20260419_190747.csv",
+  "source_output_html": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\volusia_map_20260419_190747.html",
+  "rows_in_output": 252,
+  "markers_shown": 252,
+  "generated_at_utc": 1776806724.0047567
+}
