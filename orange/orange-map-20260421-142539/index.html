@@ -47,12 +47,41 @@
     .topbar {
       position: absolute;
       top: 12px;
-      left: 12px;
       right: 12px;
-      z-index: 900;
+      width: min(360px, calc(100vw - 24px));
+      z-index: 930;
       display: grid;
+      justify-items: end;
       gap: 10px;
       pointer-events: none;
+    }
+    .topbar-panel {
+      width: 100%;
+      display: grid;
+      gap: 10px;
+      transform: translateY(calc(-100% - 14px));
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: transform 0.24s ease, opacity 0.2s ease, visibility 0.2s ease;
+    }
+    .topbar.open .topbar-panel {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    .topbar-toggle {
+      pointer-events: auto;
+      border: none;
+      border-radius: 999px;
+      background: rgba(7, 17, 23, 0.94);
+      color: var(--text);
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28);
+      border: 1px solid var(--border);
     }
     .glass {
       background: var(--surface);
@@ -456,6 +485,16 @@
       .topbar {
         right: auto;
         width: 390px;
+        justify-items: stretch;
+      }
+      .topbar-toggle {
+        display: none;
+      }
+      .topbar-panel {
+        transform: none;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
       }
       .sheet-toggle {
         display: none;
@@ -478,28 +517,31 @@
     }
   </style>
 </head>
-<body>
+  <body>
   <div class="app">
     <div id="map"></div>
-    <div class="topbar">
-      <section class="glass hero">
-        <p class="eyebrow">Florida Permit Intelligence Beta</p>
-        <h1>Florida Permit Intelligence Beta Map - orange_output_20260421_142539</h1>
-        <p class="subtitle">Marker priority is driven by roof age so older roofs stand out first. Click any address in the left list to jump straight to that property and open the full map details.</p>
-      </section>
-      <section class="glass" style="padding: 10px 12px;">
-        <div class="stats">
-          <div class="stat"><span class="label">Rows in output</span><span class="value">734</span></div>
-          <div class="stat"><span class="label">Markers shown</span><span class="value">670</span></div>
-          <div class="stat"><span class="label">21+ years</span><span class="value">1</span></div>
-          <div class="stat"><span class="label">16-20 years</span><span class="value">14</span></div>
-        </div>
-      </section>
+    <div id="topbar" class="topbar">
+      <button id="topbar-toggle" class="topbar-toggle" type="button" aria-expanded="false">Map details</button>
+      <div class="topbar-panel">
+        <section class="glass hero">
+          <p class="eyebrow">Florida Permit Intelligence Beta</p>
+          <h1>Florida Permit Intelligence Beta Map - orange_output_20260421_142539</h1>
+          <p class="subtitle">Marker priority is driven by roof age so older roofs stand out first. Click any address in the left list to jump straight to that property and open the full map details.</p>
+        </section>
+        <section class="glass" style="padding: 10px 12px;">
+          <div class="stats">
+            <div class="stat"><span class="label">Rows in output</span><span class="value">734</span></div>
+            <div class="stat"><span class="label">Markers shown</span><span class="value">670</span></div>
+            <div class="stat"><span class="label">21+ years</span><span class="value">1</span></div>
+            <div class="stat"><span class="label">16-20 years</span><span class="value">14</span></div>
+          </div>
+        </section>
+      </div>
     </div>
 
     <button id="sheet-toggle" class="sheet-toggle" type="button">Show addresses</button>
 
-    <section id="sheet" class="sheet glass open">
+    <section id="sheet" class="sheet glass">
       <div class="sheet-header">
         <div class="sheet-handle"></div>
         <div class="sheet-title">
@@ -536,6 +578,8 @@
     const MAP_STANDARD_VERSION = "2026-04-21-v1";
     const MAP_SUMMARY = {"county": "Orange", "rows_in_output": 734, "markers_shown": 670, "age_21_plus": 1, "age_16_20": 14, "age_11_15": 337, "age_0_10": 221, "age_unknown": 0, "no_data": 97, "errors": 55, "duplicate_rows_hidden": 9};
     const DEFAULT_CENTER = [28.35, -81.45];
+    const topbar = document.getElementById('topbar');
+    const topbarToggle = document.getElementById('topbar-toggle');
     const sheet = document.getElementById('sheet');
     const sheetToggle = document.getElementById('sheet-toggle');
     const filterRow = document.getElementById('filter-row');
@@ -583,6 +627,32 @@
 
     function markerStyle(record) {
       return MARKER_STYLES[record.marker_group] || MARKER_STYLES.age_0_10;
+    }
+
+    function isDesktopLayout() {
+      return window.innerWidth >= 1025;
+    }
+
+    function syncTopbarState() {
+      if (isDesktopLayout()) {
+        topbar.classList.add('open');
+        topbarToggle.setAttribute('aria-expanded', 'true');
+        topbarToggle.textContent = 'Map details';
+        return;
+      }
+      const open = topbar.classList.contains('open');
+      topbarToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      topbarToggle.textContent = open ? 'Hide map info' : 'Map details';
+    }
+
+    function syncSheetState() {
+      if (isDesktopLayout()) {
+        sheet.classList.add('open');
+        sheetToggle.textContent = 'Addresses';
+        return;
+      }
+      const open = sheet.classList.contains('open');
+      sheetToggle.textContent = open ? 'Hide addresses' : 'Show addresses';
     }
 
     function activeFilterOption() {
@@ -679,9 +749,11 @@
       if (!marker) return false;
       const record = recordById.get(recordId);
       setActiveRecord(recordId);
-      if (window.innerWidth < 1025) {
+      if (!isDesktopLayout()) {
+        topbar.classList.remove('open');
+        syncTopbarState();
         sheet.classList.remove('open');
-        sheetToggle.textContent = 'Show addresses';
+        syncSheetState();
       }
       map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 17), { animate: true, duration: 0.25 });
       marker.bindPopup(buildPopup(record)).openPopup();
@@ -857,9 +929,25 @@
       }
     }
 
+    topbarToggle.addEventListener('click', () => {
+      if (isDesktopLayout()) return;
+      topbar.classList.toggle('open');
+      syncTopbarState();
+    });
+
     sheetToggle.addEventListener('click', () => {
-      const open = sheet.classList.toggle('open');
-      sheetToggle.textContent = open ? 'Hide addresses' : 'Show addresses';
+      if (isDesktopLayout()) return;
+      sheet.classList.toggle('open');
+      syncSheetState();
+    });
+
+    window.addEventListener('resize', () => {
+      if (isDesktopLayout()) {
+        topbar.classList.add('open');
+        sheet.classList.add('open');
+      }
+      syncTopbarState();
+      syncSheetState();
     });
 
     recordList.addEventListener('scroll', () => {
@@ -884,6 +972,8 @@
         }
         renderFilterControls();
         applyActiveFilter(true);
+        syncTopbarState();
+        syncSheetState();
       })
       .catch((error) => {
         console.error(error);
