@@ -1,0 +1,10 @@
+{
+  "title": "Florida Permit Intelligence Beta Map - orange_output_20260421_142539",
+  "county": "Orange",
+  "map_standard_version": "2026-04-21-v1",
+  "source_output_csv": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\orange_output_20260421_142539.csv",
+  "source_output_html": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\orange_map_20260421_142539.html",
+  "rows_in_output": 734,
+  "markers_shown": 670,
+  "generated_at_utc": 1776801690.6207044
+}
