@@ -189,6 +189,62 @@
       display: inline-block;
       border: 1px solid rgba(255, 255, 255, 0.55);
     }
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .filter-row::-webkit-scrollbar {
+      display: none;
+    }
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    }
+    .filter-chip:active {
+      transform: translateY(1px);
+    }
+    .filter-chip.active {
+      background: rgba(126, 231, 181, 0.14);
+      border-color: rgba(126, 231, 181, 0.48);
+      box-shadow: 0 0 0 1px rgba(126, 231, 181, 0.18);
+    }
+    .filter-chip-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      flex: 0 0 auto;
+    }
+    .filter-chip-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
     .list-shell {
       overflow: hidden;
       display: grid;
@@ -460,6 +516,7 @@
           <span class="summary-pill"><span class="summary-dot" style="background:#dbe4ee;"></span>0-10 221</span>
           <span class="summary-pill"><span class="summary-dot" style="background:#1f2937;"></span>No data 97</span>
         </div>
+        <div id="filter-row" class="filter-row" aria-label="Map category filters"></div>
       </div>
       <div class="list-shell">
         <div class="list-toolbar">
@@ -481,6 +538,7 @@
     const DEFAULT_CENTER = [28.35, -81.45];
     const sheet = document.getElementById('sheet');
     const sheetToggle = document.getElementById('sheet-toggle');
+    const filterRow = document.getElementById('filter-row');
     const recordList = document.getElementById('record-list');
     const listStatus = document.getElementById('list-status');
 
@@ -493,11 +551,26 @@
       no_data: { label: 'No data', bg: '#1f2937', border: '#0f172a', text: '#ffffff', symbol: '?', size: 14, outcome: '#1f2937' },
     };
     const LOW_PRIORITY_GROUPS = new Set(['age_0_10', 'age_unknown', 'no_data']);
+    const FILTER_OPTIONS = [
+      { key: 'all', label: 'All', count: MAP_SUMMARY.markers_shown, color: '#7ee7b5' },
+      { key: 'age_21_plus', label: '21+', count: MAP_SUMMARY.age_21_plus, color: '#dc2626' },
+      { key: 'age_16_20', label: '16-20', count: MAP_SUMMARY.age_16_20, color: '#fb923c' },
+      { key: 'age_11_15', label: '11-15', count: MAP_SUMMARY.age_11_15, color: '#facc15' },
+      { key: 'age_0_10', label: '0-10', count: MAP_SUMMARY.age_0_10, color: '#dbe4ee' },
+      { key: 'no_data', label: 'NO DATA', count: MAP_SUMMARY.no_data, color: '#1f2937' },
+    ];
+    if (MAP_SUMMARY.age_unknown > 0) {
+      FILTER_OPTIONS.push({ key: 'age_unknown', label: 'Age ?', count: MAP_SUMMARY.age_unknown, color: '#94a3b8' });
+    }
     let records = [];
+    let visibleRecords = [];
     let renderCursor = 0;
     const recordCardById = new Map();
     const markerById = new Map();
+    const recordById = new Map();
+    const filterButtonByKey = new Map();
     const visibleBounds = [];
+    let activeFilterKey = 'all';
 
     function escapeHtml(text) {
       return String(text || '')
@@ -510,6 +583,50 @@
 
     function markerStyle(record) {
       return MARKER_STYLES[record.marker_group] || MARKER_STYLES.age_0_10;
+    }
+
+    function activeFilterOption() {
+      return FILTER_OPTIONS.find((option) => option.key === activeFilterKey) || FILTER_OPTIONS[0];
+    }
+
+    function filterRecords() {
+      if (activeFilterKey === 'all') return records.slice();
+      return records.filter((record) => record.marker_group === activeFilterKey);
+    }
+
+    function syncFilterButtons() {
+      filterButtonByKey.forEach((button, key) => {
+        button.classList.toggle('active', key === activeFilterKey);
+      });
+    }
+
+    function renderFilterControls() {
+      filterRow.innerHTML = '';
+      filterButtonByKey.clear();
+      FILTER_OPTIONS.forEach((option) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'filter-chip';
+        button.innerHTML = `
+          <span class="filter-chip-dot" style="background:${option.color};"></span>
+          <span>${escapeHtml(option.label)}</span>
+          <span class="filter-chip-count">${option.count}</span>
+        `;
+        button.addEventListener('click', () => {
+          if (activeFilterKey === option.key) {
+            if (option.key !== 'all') {
+              activeFilterKey = 'all';
+            }
+          } else {
+            activeFilterKey = option.key;
+          }
+          syncFilterButtons();
+          applyActiveFilter(true);
+        });
+        filterButtonByKey.set(option.key, button);
+        filterRow.appendChild(button);
+      });
+      syncFilterButtons();
     }
 
     function sizeClass(size) {
@@ -560,7 +677,7 @@
     function focusRecord(recordId) {
       const marker = markerById.get(recordId);
       if (!marker) return false;
-      const record = records.find((item) => item.id === recordId);
+      const record = recordById.get(recordId);
       setActiveRecord(recordId);
       if (window.innerWidth < 1025) {
         sheet.classList.remove('open');
@@ -603,13 +720,18 @@
     }
 
     function renderNextBatch() {
-      const next = records.slice(renderCursor, renderCursor + 40);
+      const next = visibleRecords.slice(renderCursor, renderCursor + 40);
       next.forEach((record) => recordList.appendChild(recordCard(record)));
       renderCursor += next.length;
-      if (renderCursor >= records.length) {
-        listStatus.textContent = `${records.length} record(s) ready`;
+      const activeLabel = activeFilterOption().label;
+      if (renderCursor >= visibleRecords.length) {
+        listStatus.textContent = activeFilterKey === 'all'
+          ? `${visibleRecords.length} record(s) ready`
+          : `${activeLabel}: ${visibleRecords.length} record(s) ready`;
       } else {
-        listStatus.textContent = `${renderCursor} of ${records.length} record(s) shown`;
+        listStatus.textContent = activeFilterKey === 'all'
+          ? `${renderCursor} of ${visibleRecords.length} record(s) shown`
+          : `${activeLabel}: ${renderCursor} of ${visibleRecords.length} shown`;
       }
     }
 
@@ -669,6 +791,7 @@
       disableClusteringAtZoom: clusterLowPriorityOnly ? 17 : 16,
       iconCreateFunction: (cluster) => clusterIcon(cluster.getAllChildMarkers()),
     });
+    clusterLayer.addTo(map);
     const directLayer = L.layerGroup().addTo(map);
 
     function addMarker(record) {
@@ -694,6 +817,46 @@
       }
     }
 
+    function fitVisibleMarkers() {
+      if (!visibleBounds.length) {
+        map.setView(DEFAULT_CENTER, 10);
+        return;
+      }
+      if (visibleBounds.length === 1) {
+        map.setView(visibleBounds[0], 17);
+        return;
+      }
+      map.fitBounds(visibleBounds, { padding: [28, 28] });
+    }
+
+    function applyActiveFilter(recenter) {
+      visibleRecords = filterRecords();
+      renderCursor = 0;
+      recordList.innerHTML = '';
+      recordCardById.clear();
+      markerById.clear();
+      visibleBounds.length = 0;
+      clusterLayer.clearLayers();
+      directLayer.clearLayers();
+      setActiveRecord('');
+
+      if (!visibleRecords.length) {
+        const activeLabel = activeFilterOption().label;
+        recordList.innerHTML = `<div class="empty-state">No shared map records matched ${escapeHtml(activeLabel)} right now.</div>`;
+        listStatus.textContent = activeFilterKey === 'all' ? 'No records found' : `${activeLabel}: 0 record(s)`;
+        if (recenter) {
+          map.setView(DEFAULT_CENTER, 10);
+        }
+        return;
+      }
+
+      visibleRecords.forEach(addMarker);
+      renderNextBatch();
+      if (recenter) {
+        fitVisibleMarkers();
+      }
+    }
+
     sheetToggle.addEventListener('click', () => {
       const open = sheet.classList.toggle('open');
       sheetToggle.textContent = open ? 'Hide addresses' : 'Show addresses';
@@ -709,23 +872,18 @@
     fetch('records.json', { cache: 'no-store' })
       .then((response) => response.json())
       .then((payload) => {
-        records = Array.isArray(payload.records) ? payload.records : [];
-        recordList.innerHTML = '';
-        records.forEach(addMarker);
-        if (clusterLayer.getLayers().length) {
-          clusterLayer.addTo(map);
-        }
-        if (visibleBounds.length === 1) {
-          map.setView(visibleBounds[0], 17);
-        } else if (visibleBounds.length > 1) {
-          map.fitBounds(visibleBounds, { padding: [28, 28] });
-        }
+        records = (Array.isArray(payload.records) ? payload.records : []).filter((record) =>
+          !record.hide_marker && Number.isFinite(record.map_lat) && Number.isFinite(record.map_lon)
+        );
+        recordById.clear();
+        records.forEach((record) => recordById.set(record.id, record));
         if (!records.length) {
           recordList.innerHTML = '<div class="empty-state">No mappable records were found in this shared map.</div>';
           listStatus.textContent = 'No records found';
           return;
         }
-        renderNextBatch();
+        renderFilterControls();
+        applyActiveFilter(true);
       })
       .catch((error) => {
         console.error(error);
