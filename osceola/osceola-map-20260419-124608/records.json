@@ -1,0 +1,53 @@
+{
+  "map_standard_version": "2026-04-21-v1",
+  "records": [
+    {
+      "id": "record-1",
+      "parcel": "01-26-30-0650-0001-0345",
+      "address": "410 CYPRESS AVE SAINT CLOUD FL 34769 34769",
+      "owner": "/",
+      "roof_date": "05/20/2005",
+      "roof_type": "REROOF",
+      "roof_age_display": "21 years | 21-25 yrs",
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=410+CYPRESS+AVE+SAINT+CLOUD+FL+34769+34769",
+      "coord_accuracy": "address-confirmed",
+      "coord_note": "",
+      "marker_group": "age_21_plus",
+      "hide_marker": false,
+      "map_lat": 28.2583229841,
+      "map_lon": -81.273926031438
+    },
+    {
+      "id": "record-2",
+      "parcel": "02-25-29-1722-0001-0210",
+      "address": "1481 HARBIN DR KISSIMMEE FL 34744 34744",
+      "owner": "MILE HIGH BORROWER 1 (INCOME) LLC",
+      "roof_date": "06/16/2022",
+      "roof_type": "REROOF",
+      "roof_age_display": "4 years | 0-5 yrs (New)",
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=1481+HARBIN+DR+KISSIMMEE+FL+34744+34744",
+      "coord_accuracy": "address-confirmed",
+      "coord_note": "",
+      "marker_group": "age_0_10",
+      "hide_marker": false,
+      "map_lat": 28.33691371993,
+      "map_lon": -81.383463424343
+    },
+    {
+      "id": "record-3",
+      "parcel": "04-25-31-4260-0001-0137",
+      "address": "2951 N NARCOOSSEE RD SAINT CLOUD FL 34771 34771",
+      "owner": "SINGH ANIL KUMAR / SINGH RAGINI",
+      "roof_date": "04/17/2006",
+      "roof_type": "REROOF",
+      "roof_age_display": "20 years | 16-20 yrs",
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=2951+N+NARCOOSSEE+RD+SAINT+CLOUD+FL+34771+34771",
+      "coord_accuracy": "address-confirmed",
+      "coord_note": "",
+      "marker_group": "age_16_20",
+      "hide_marker": false,
+      "map_lat": 28.336703627527,
+      "map_lon": -81.226716470545
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Florida Permit Intelligence Beta Map - osceola_output_20260419_124608",
+  "county": "Osceola",
+  "map_standard_version": "2026-04-21-v1",
+  "source_output_csv": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\manual_osceola_live_smoke_layout_20260419\\osceola_output_20260419_124608.csv",
+  "source_output_html": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\manual_osceola_live_smoke_layout_20260419\\osceola_map_20260419_124608.html",
+  "rows_in_output": 3,
+  "markers_shown": 3,
+  "generated_at_utc": 1776806565.4165168
+}
