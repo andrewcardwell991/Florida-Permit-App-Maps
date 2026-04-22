@@ -12,16 +12,14 @@
       color-scheme: dark;
       --bg: #04090b;
       --surface: rgba(8, 14, 18, 0.92);
-      --surface-solid: #071117;
-      --surface-strong: rgba(8, 14, 18, 0.97);
       --border: rgba(99, 179, 237, 0.18);
       --text: #edf7f3;
       --muted: #a4bbc1;
       --accent: #7ee7b5;
-      --accent-strong: #2fd68a;
       --shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
-      --desktop-sidebar-width: 390px;
-      --desktop-sheet-top: 324px;
+      --desktop-sidebar-width: clamp(330px, 28vw, 430px);
+      --mobile-sheet-open-height: 74dvh;
+      --mobile-sheet-peek-height: 78px;
     }
     * { box-sizing: border-box; }
     html {
@@ -59,35 +57,18 @@
       height: 100%;
       background: #03070a;
     }
-    .topbar {
+    .glass {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+    .sidebar {
+      pointer-events: none;
+    }
+    .floating-toggle {
       position: absolute;
-      top: max(12px, env(safe-area-inset-top));
-      right: max(12px, env(safe-area-inset-right));
-      width: min(360px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)));
-      z-index: 930;
-      display: grid;
-      justify-items: end;
-      gap: 10px;
-      pointer-events: none;
-    }
-    .topbar-panel {
-      width: 100%;
-      display: grid;
-      gap: 10px;
-      transform: translateY(calc(-100% - 14px));
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-      transition: transform 0.24s ease, opacity 0.2s ease, visibility 0.2s ease;
-    }
-    .topbar.open .topbar-panel {
-      transform: translateY(0);
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-    }
-    .topbar-toggle {
-      pointer-events: auto;
       border: none;
       border-radius: 999px;
       background: rgba(7, 17, 23, 0.94);
@@ -97,17 +78,42 @@
       font-weight: 800;
       box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28);
       border: 1px solid var(--border);
+      z-index: 940;
+      transition: opacity 0.2s ease, transform 0.2s ease;
     }
-    .glass {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(12px);
+    .floating-toggle.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(18px);
+    }
+    .details-toggle {
+      top: max(12px, env(safe-area-inset-top));
+      right: max(12px, env(safe-area-inset-right));
+    }
+    .sheet-toggle {
+      right: max(12px, env(safe-area-inset-right));
+      bottom: calc(env(safe-area-inset-bottom) + 12px);
+    }
+    .details-panel {
+      position: absolute;
+      top: max(12px, env(safe-area-inset-top));
+      right: max(12px, env(safe-area-inset-right));
+      width: min(360px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+      z-index: 930;
       pointer-events: auto;
-    }
-    .hero {
       padding: 14px 16px;
+      transform: translateY(calc(-100% - 14px));
+      opacity: 0;
+      visibility: hidden;
+      transition: transform 0.24s ease, opacity 0.2s ease, visibility 0.2s ease;
+      overflow: hidden auto;
+      max-height: min(56vh, 56svh, 56dvh, 560px);
+      overscroll-behavior: contain;
+    }
+    .details-panel.open {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
     }
     .eyebrow {
       margin: 0 0 4px;
@@ -128,47 +134,98 @@
       font-size: 13px;
       line-height: 1.45;
     }
-    .stats {
+    .detail-section {
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+    }
+    .detail-section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+    }
+    .detail-inline-note {
+      text-transform: none;
+      letter-spacing: normal;
+      font-weight: 600;
+      font-size: 11px;
+    }
+    .detail-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
     }
-    .stat {
+    .detail-card {
       padding: 10px 12px;
       border-radius: 16px;
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.06);
     }
-    .stat .label {
+    .detail-card .label {
       display: block;
       font-size: 11px;
       color: var(--muted);
       margin-bottom: 4px;
     }
-    .stat .value {
+    .detail-card .value {
       display: block;
       font-size: 19px;
       font-weight: 800;
     }
-    .sheet-toggle {
-      position: absolute;
-      right: max(12px, env(safe-area-inset-right));
-      bottom: calc(env(safe-area-inset-bottom) + 12px);
-      z-index: 920;
-      border: none;
-      border-radius: 999px;
-      background: rgba(7, 17, 23, 0.94);
-      color: var(--text);
-      padding: 12px 16px;
-      font-weight: 700;
-      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28);
-      border: 1px solid var(--border);
-      transition: opacity 0.2s ease, transform 0.2s ease;
+    .detail-breakdown {
+      display: grid;
+      gap: 8px;
     }
-    .sheet-toggle.hidden {
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(18px);
+    .detail-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 12px;
+    }
+    .detail-row-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .detail-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      flex: 0 0 auto;
+    }
+    .detail-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .detail-count {
+      font-weight: 800;
+    }
+    .detail-percent {
+      min-width: 44px;
+      text-align: right;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .detail-note {
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.45;
     }
     .sheet {
       position: absolute;
@@ -176,22 +233,23 @@
       right: max(10px, env(safe-area-inset-right));
       bottom: calc(env(safe-area-inset-bottom) + 10px);
       z-index: 910;
-      display: grid;
-      grid-template-rows: auto minmax(0, 1fr);
+      display: flex;
+      flex-direction: column;
       gap: 0;
-      max-height: min(58vh, 58svh, 58dvh, 560px);
+      max-height: min(var(--mobile-sheet-open-height), calc(100dvh - 96px));
       min-height: 92px;
       border-radius: 26px;
       overflow: hidden;
-      transform: translateY(calc(100% - 88px));
+      transform: translateY(calc(100% - var(--mobile-sheet-peek-height)));
       transition: transform 0.24s ease;
       overscroll-behavior: contain;
+      pointer-events: auto;
     }
     .sheet.open {
       transform: translateY(0);
     }
     .sheet-header {
-      padding: 10px 18px 14px;
+      padding: 10px 18px 12px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
     .sheet-handle {
@@ -239,34 +297,18 @@
       color: var(--muted);
       line-height: 1.45;
     }
-    .summary-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
-    }
-    .summary-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      border-radius: 999px;
-      padding: 8px 10px;
-      font-size: 12px;
-      font-weight: 700;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-    }
-    .summary-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      display: inline-block;
-      border: 1px solid rgba(255, 255, 255, 0.55);
+    .sheet-subheader {
+      display: grid;
+      gap: 10px;
+      padding: 10px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(7, 17, 23, 0.96);
+      z-index: 2;
     }
     .filter-row {
       display: flex;
+      flex-wrap: nowrap;
       gap: 8px;
-      margin-top: 12px;
       overflow-x: auto;
       padding-bottom: 2px;
       -webkit-overflow-scrolling: touch;
@@ -319,19 +361,11 @@
       font-size: 11px;
       font-weight: 800;
     }
-    .list-shell {
-      overflow: hidden;
-      display: grid;
-      grid-template-rows: auto 1fr;
-      min-height: 0;
-    }
     .list-toolbar {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       gap: 12px;
-      padding: 10px 18px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       color: var(--muted);
       font-size: 12px;
     }
@@ -341,6 +375,8 @@
       display: grid;
       gap: 10px;
       -webkit-overflow-scrolling: touch;
+      flex: 1 1 auto;
+      min-height: 0;
     }
     .record {
       border-radius: 18px;
@@ -386,6 +422,7 @@
       font-weight: 800;
       line-height: 1.35;
       margin-bottom: 8px;
+      word-break: break-word;
     }
     .record-age {
       display: inline-flex;
@@ -405,6 +442,7 @@
       color: var(--muted);
       font-size: 12px;
       line-height: 1.45;
+      word-break: break-word;
     }
     .record-note {
       margin-top: 10px;
@@ -528,35 +566,63 @@
       line-height: 1.5;
     }
     @media (min-width: 1025px) {
-      .topbar {
+      .sidebar {
+        position: absolute;
         top: 12px;
         left: 12px;
-        right: auto;
+        bottom: 12px;
         width: var(--desktop-sidebar-width);
-        justify-items: stretch;
+        z-index: 930;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        pointer-events: none;
       }
-      .topbar-toggle {
-        display: none;
-      }
-      .topbar-panel {
+      .details-panel {
+        position: relative;
+        top: auto;
+        right: auto;
+        width: 100%;
         transform: none;
         opacity: 1;
         visibility: visible;
-        pointer-events: auto;
+        max-height: min(46vh, 430px);
       }
-      .sheet-toggle {
+      .floating-toggle {
         display: none;
       }
       .sheet {
-        top: var(--desktop-sheet-top);
-        bottom: 12px;
-        left: 12px;
-        width: var(--desktop-sidebar-width);
+        position: relative;
+        left: auto;
         right: auto;
+        bottom: auto;
         max-height: none;
         min-height: 0;
         transform: none;
         border-radius: 24px;
+        flex: 1 1 auto;
+      }
+      .sheet-close {
+        display: none;
+      }
+      .sheet-subheader {
+        padding: 10px 14px;
+      }
+      .filter-row {
+        flex-wrap: wrap;
+        overflow-x: visible;
+        scrollbar-width: auto;
+      }
+      .filter-row::-webkit-scrollbar {
+        display: block;
+        height: 8px;
+      }
+      .filter-row::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.14);
+        border-radius: 999px;
+      }
+      .record-list {
+        padding-bottom: 18px;
       }
       #map {
         left: calc(var(--desktop-sidebar-width) + 24px);
@@ -564,10 +630,8 @@
       }
     }
     @media (max-width: 640px) and (orientation: portrait) {
-      .topbar {
+      .details-panel {
         width: min(320px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)));
-      }
-      .hero {
         padding: 12px 14px;
       }
       h1 {
@@ -576,24 +640,29 @@
       .subtitle {
         font-size: 12px;
       }
-      .stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+      .detail-grid {
+        gap: 6px;
       }
-      .stat .value {
+      .detail-card {
+        padding: 8px 10px;
+      }
+      .detail-card .value {
         font-size: 17px;
       }
+      .detail-row {
+        padding: 7px 8px;
+      }
       .sheet {
-        max-height: min(74vh, 74svh, 74dvh, 680px);
-        transform: translateY(calc(100% - 78px));
+        max-height: min(var(--mobile-sheet-open-height), calc(100dvh - 88px));
       }
       .sheet-header {
-        padding: 8px 12px 8px;
+        padding: 8px 12px 6px;
       }
       .sheet-handle {
-        margin: 6px auto 8px;
+        margin: 6px auto 6px;
       }
       .sheet-title {
-        margin-bottom: 2px;
+        margin-bottom: 0;
       }
       .sheet-header-actions {
         gap: 8px;
@@ -607,14 +676,11 @@
       .sheet-copy {
         display: none;
       }
-      .summary-row {
-        display: none;
-      }
-      .filter-row {
-        margin-top: 8px;
+      .sheet-subheader {
+        gap: 8px;
+        padding: 8px 12px;
       }
       .list-toolbar {
-        padding: 8px 12px;
         font-size: 11px;
       }
       .record-list {
@@ -626,72 +692,73 @@
     }
   </style>
 </head>
-  <body>
+<body>
   <div class="app">
     <div id="map"></div>
-    <div id="topbar" class="topbar">
-      <button id="topbar-toggle" class="topbar-toggle" type="button" aria-expanded="false">Map details</button>
-      <div class="topbar-panel">
-        <section class="glass hero">
-          <p class="eyebrow">Florida Permit Intelligence Beta</p>
-          <h1>Florida Permit Intelligence Beta Map - orange_output_20260421_142539</h1>
-          <p class="subtitle">Marker priority is driven by roof age so older roofs stand out first. Click any address in the left list to jump straight to that property and open the full map details.</p>
-        </section>
-        <section class="glass" style="padding: 10px 12px;">
-          <div class="stats">
-            <div class="stat"><span class="label">Rows in output</span><span class="value">734</span></div>
-            <div class="stat"><span class="label">Markers shown</span><span class="value">670</span></div>
-            <div class="stat"><span class="label">21+ years</span><span class="value">1</span></div>
-            <div class="stat"><span class="label">16-20 years</span><span class="value">14</span></div>
+    <button id="details-toggle" class="floating-toggle details-toggle" type="button" aria-expanded="false">Map details</button>
+    <button id="sheet-toggle" class="floating-toggle sheet-toggle" type="button">Show addresses</button>
+
+    <aside id="sidebar" class="sidebar">
+      <section id="details-panel" class="details-panel glass">
+        <p class="eyebrow">Florida Permit Intelligence Beta</p>
+        <h1>Florida Permit Intelligence Beta Map - orange_output_20260421_142539</h1>
+        <p class="subtitle">Marker priority is driven by roof age so older roofs stand out first. Click any address in the left list to jump straight to that property and open the full map details.</p>
+        <div class="detail-section">
+          <div class="detail-section-title">
+            <span>Map details</span>
+            <span class="detail-inline-note">Percent of unique rows</span>
           </div>
-        </section>
-      </div>
-    </div>
-
-    <button id="sheet-toggle" class="sheet-toggle" type="button">Show addresses</button>
-
-    <section id="sheet" class="sheet glass">
-      <div class="sheet-header">
-        <div class="sheet-handle"></div>
-        <div class="sheet-title">
-          <strong>Property list</strong>
-          <div class="sheet-header-actions">
-            <span class="sheet-standard">Map standard 2026-04-21-v1</span>
-            <button id="sheet-close" class="sheet-close" type="button">Hide</button>
+          <div class="detail-grid">
+            <div class="detail-card"><span class="label">Rows in output</span><span class="value">734</span></div><div class="detail-card"><span class="label">Unique rows</span><span class="value">725</span></div><div class="detail-card"><span class="label">Markers shown</span><span class="value">670</span></div><div class="detail-card"><span class="label">Duplicates hidden</span><span class="value">9</span></div><div class="detail-card"><span class="label">Errors hidden</span><span class="value">55</span></div>
           </div>
         </div>
-        <div class="sheet-copy">
-          Mobile-friendly public map link. Tap any property to center the map and open its details. Error rows stay counted but do not plot as pins.
+        <div class="detail-section">
+          <div class="detail-section-title">
+            <span>Row outcomes</span>
+          </div>
+          <div class="detail-breakdown">
+            <div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#dc2626;"></span><span class="detail-label">21+</span></span><span class="detail-count">1</span><span class="detail-percent">0.1%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#fb923c;"></span><span class="detail-label">16-20</span></span><span class="detail-count">14</span><span class="detail-percent">1.9%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#facc15;"></span><span class="detail-label">11-15</span></span><span class="detail-count">337</span><span class="detail-percent">46.5%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#dbe4ee;"></span><span class="detail-label">0-10</span></span><span class="detail-count">221</span><span class="detail-percent">30.5%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#1f2937;"></span><span class="detail-label">NO DATA</span></span><span class="detail-count">97</span><span class="detail-percent">13.4%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#475569;"></span><span class="detail-label">ERROR hidden</span></span><span class="detail-count">55</span><span class="detail-percent">7.6%</span></div>
+          </div>
+          <div class="detail-note">The chip row below is the only clickable category control. `ERROR hidden` stays counted but is never plotted.</div>
         </div>
-        <div class="summary-row">
-          <span class="summary-pill"><span class="summary-dot" style="background:#dc2626;"></span>21+ 1</span>
-          <span class="summary-pill"><span class="summary-dot" style="background:#fb923c;"></span>16-20 14</span>
-          <span class="summary-pill"><span class="summary-dot" style="background:#facc15;"></span>11-15 337</span>
-          <span class="summary-pill"><span class="summary-dot" style="background:#dbe4ee;"></span>0-10 221</span>
-          <span class="summary-pill"><span class="summary-dot" style="background:#1f2937;"></span>No data 97</span>
+      </section>
+
+      <section id="sheet" class="sheet glass">
+        <div class="sheet-header">
+          <div class="sheet-handle"></div>
+          <div class="sheet-title">
+            <strong>Property list</strong>
+            <div class="sheet-header-actions">
+              <span class="sheet-standard">Map standard 2026-04-21-v1</span>
+              <button id="sheet-close" class="sheet-close" type="button">Hide</button>
+            </div>
+          </div>
+          <div class="sheet-copy">
+            Mobile-friendly public map link. Tap any property to center the map and open its details. Error rows stay counted but do not plot as pins.
+          </div>
         </div>
-        <div id="filter-row" class="filter-row" aria-label="Map category filters"></div>
-      </div>
-      <div class="list-shell">
-        <div class="list-toolbar">
-          <span id="list-status">Loading records...</span>
-          <span>9 duplicate row(s) hidden</span>
+        <div class="sheet-subheader">
+          <div id="filter-row" class="filter-row" aria-label="Map category filters"></div>
+          <div class="list-toolbar">
+            <span id="list-status">Loading records...</span>
+          </div>
         </div>
         <div id="record-list" class="record-list">
-          <div class="loading-state">Loading map records…</div>
+          <div class="loading-state">Loading map records...</div>
         </div>
-      </div>
-    </section>
+      </section>
+    </aside>
   </div>
 
   <script src="assets/leaflet/leaflet.js"></script>
   <script src="assets/markercluster/leaflet.markercluster.js"></script>
   <script>
     const MAP_STANDARD_VERSION = "2026-04-21-v1";
-    const MAP_SUMMARY = {"county": "Orange", "rows_in_output": 734, "markers_shown": 670, "age_21_plus": 1, "age_16_20": 14, "age_11_15": 337, "age_0_10": 221, "age_unknown": 0, "no_data": 97, "errors": 55, "duplicate_rows_hidden": 9};
+    const MAP_DETAILS = {"rows_in_output": 734, "unique_rows": 725, "markers_shown": 670, "duplicates_hidden": 9, "errors_hidden": 55, "categories": [{"key": "age_21_plus", "label": "21+", "count": 1, "percent_of_unique_rows": 0.1, "filterable": true, "color": "#dc2626"}, {"key": "age_16_20", "label": "16-20", "count": 14, "percent_of_unique_rows": 1.9, "filterable": true, "color": "#fb923c"}, {"key": "age_11_15", "label": "11-15", "count": 337, "percent_of_unique_rows": 46.5, "filterable": true, "color": "#facc15"}, {"key": "age_0_10", "label": "0-10", "count": 221, "percent_of_unique_rows": 30.5, "filterable": true, "color": "#dbe4ee"}, {"key": "no_data", "label": "NO DATA", "count": 97, "percent_of_unique_rows": 13.4, "filterable": true, "color": "#1f2937"}, {"key": "errors", "label": "ERROR hidden", "count": 55, "percent_of_unique_rows": 7.6, "filterable": false, "color": "#475569"}]};
     const DEFAULT_CENTER = [28.35, -81.45];
-    const topbar = document.getElementById('topbar');
-    const topbarToggle = document.getElementById('topbar-toggle');
+
+    const detailsPanel = document.getElementById('details-panel');
+    const detailsToggle = document.getElementById('details-toggle');
     const sheet = document.getElementById('sheet');
     const sheetToggle = document.getElementById('sheet-toggle');
     const sheetClose = document.getElementById('sheet-close');
@@ -700,34 +767,33 @@
     const listStatus = document.getElementById('list-status');
 
     const MARKER_STYLES = {
-      age_21_plus: { label: '21+ years', bg: '#dc2626', border: '#991b1b', text: '#ffffff', symbol: '❤', size: 30, outcome: '#dc2626' },
-      age_16_20: { label: '16-20 years', bg: '#fb923c', border: '#ea580c', text: '#431407', symbol: '', size: 22, outcome: '#fb923c' },
-      age_11_15: { label: '11-15 years', bg: '#facc15', border: '#ca8a04', text: '#422006', symbol: '', size: 20, outcome: '#facc15' },
-      age_0_10: { label: '0-10 years', bg: '#dbe4ee', border: '#64748b', text: '#334155', symbol: '', size: 10, outcome: '#dbe4ee' },
-      age_unknown: { label: 'Age not calculated', bg: '#e2e8f0', border: '#64748b', text: '#334155', symbol: '!', size: 14, outcome: '#cbd5e1' },
-      no_data: { label: 'No data', bg: '#1f2937', border: '#0f172a', text: '#ffffff', symbol: '?', size: 14, outcome: '#1f2937' },
+      age_21_plus: { label: '21+', bg: '#dc2626', border: '#991b1b', text: '#ffffff', symbol: '❤', size: 30 },
+      age_16_20: { label: '16-20', bg: '#fb923c', border: '#ea580c', text: '#431407', symbol: '', size: 22 },
+      age_11_15: { label: '11-15', bg: '#facc15', border: '#ca8a04', text: '#422006', symbol: '', size: 20 },
+      age_0_10: { label: '0-10', bg: '#dbe4ee', border: '#64748b', text: '#334155', symbol: '', size: 10 },
+      age_unknown: { label: 'Age ?', bg: '#e2e8f0', border: '#64748b', text: '#334155', symbol: '!', size: 14 },
+      no_data: { label: 'NO DATA', bg: '#1f2937', border: '#0f172a', text: '#ffffff', symbol: '?', size: 14 },
     };
     const LOW_PRIORITY_GROUPS = new Set(['age_0_10', 'age_unknown', 'no_data']);
     const FILTER_OPTIONS = [
-      { key: 'all', label: 'All', count: MAP_SUMMARY.markers_shown, color: '#7ee7b5' },
-      { key: 'age_21_plus', label: '21+', count: MAP_SUMMARY.age_21_plus, color: '#dc2626' },
-      { key: 'age_16_20', label: '16-20', count: MAP_SUMMARY.age_16_20, color: '#fb923c' },
-      { key: 'age_11_15', label: '11-15', count: MAP_SUMMARY.age_11_15, color: '#facc15' },
-      { key: 'age_0_10', label: '0-10', count: MAP_SUMMARY.age_0_10, color: '#dbe4ee' },
-      { key: 'no_data', label: 'NO DATA', count: MAP_SUMMARY.no_data, color: '#1f2937' },
+      { key: 'all', label: 'All', count: MAP_DETAILS.markers_shown, color: '#7ee7b5' },
+      ...MAP_DETAILS.categories.filter((category) => category.filterable).map((category) => ({
+        key: category.key,
+        label: category.label,
+        count: category.count,
+        color: category.color,
+      })),
     ];
-    if (MAP_SUMMARY.age_unknown > 0) {
-      FILTER_OPTIONS.push({ key: 'age_unknown', label: 'Age ?', count: MAP_SUMMARY.age_unknown, color: '#94a3b8' });
-    }
+
     let records = [];
     let visibleRecords = [];
     let renderCursor = 0;
+    let activeFilterKey = 'all';
     const recordCardById = new Map();
     const markerById = new Map();
     const recordById = new Map();
     const filterButtonByKey = new Map();
     const visibleBounds = [];
-    let activeFilterKey = 'all';
 
     function escapeHtml(text) {
       return String(text || '')
@@ -746,34 +812,35 @@
       return window.innerWidth >= 1025;
     }
 
-    function updateDesktopLayout() {
-      if (!isDesktopLayout()) {
-        document.documentElement.style.removeProperty('--desktop-sheet-top');
-        return;
-      }
-      const topbarHeight = Math.ceil(topbar.offsetHeight || 0);
-      const sheetTop = Math.max(168, topbarHeight + 24);
-      document.documentElement.style.setProperty('--desktop-sheet-top', `${sheetTop}px`);
+    function isPortraitPhoneLayout() {
+      return window.innerWidth <= 640 && window.innerHeight >= window.innerWidth;
     }
 
-    function syncTopbarState() {
-      if (isDesktopLayout()) {
-        topbar.classList.add('open');
-        topbarToggle.setAttribute('aria-expanded', 'true');
-        topbarToggle.textContent = 'Map details';
-        updateDesktopLayout();
+    function updateMobileSheetLayout() {
+      if (!isPortraitPhoneLayout()) {
+        document.documentElement.style.removeProperty('--mobile-sheet-open-height');
         return;
       }
-      const open = topbar.classList.contains('open');
-      topbarToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      topbarToggle.textContent = open ? 'Hide map info' : 'Map details';
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+      const openHeight = Math.max(360, Math.min(viewportHeight - 96, viewportHeight - 148));
+      document.documentElement.style.setProperty('--mobile-sheet-open-height', `${Math.round(openHeight)}px`);
+    }
+
+    function syncDetailsState() {
+      if (isDesktopLayout()) {
+        detailsPanel.classList.add('open');
+        detailsToggle.setAttribute('aria-expanded', 'true');
+        return;
+      }
+      const open = detailsPanel.classList.contains('open');
+      detailsToggle.textContent = open ? 'Hide map info' : 'Map details';
+      detailsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     }
 
     function syncSheetState() {
       if (isDesktopLayout()) {
         sheet.classList.add('open');
         sheetToggle.classList.remove('hidden');
-        sheetToggle.textContent = 'Addresses';
         sheetClose.hidden = true;
         return;
       }
@@ -811,13 +878,7 @@
           <span class="filter-chip-count">${option.count}</span>
         `;
         button.addEventListener('click', () => {
-          if (activeFilterKey === option.key) {
-            if (option.key !== 'all') {
-              activeFilterKey = 'all';
-            }
-          } else {
-            activeFilterKey = option.key;
-          }
+          activeFilterKey = activeFilterKey === option.key ? 'all' : option.key;
           syncFilterButtons();
           applyActiveFilter(true);
         });
@@ -878,9 +939,9 @@
       const record = recordById.get(recordId);
       setActiveRecord(recordId);
       if (!isDesktopLayout()) {
-        topbar.classList.remove('open');
-        syncTopbarState();
+        detailsPanel.classList.remove('open');
         sheet.classList.remove('open');
+        syncDetailsState();
         syncSheetState();
       }
       map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 17), { animate: true, duration: 0.25 });
@@ -979,7 +1040,7 @@
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', imageryOptions).addTo(map);
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', referenceOptions).addTo(map);
 
-    const totalPlotted = MAP_SUMMARY.markers_shown;
+    const totalPlotted = MAP_DETAILS.markers_shown;
     const mobileClustering = !isDesktopLayout();
     const clusterAllMarkers = mobileClustering && totalPlotted > 950;
     const clusterLowPriorityOnly = mobileClustering && totalPlotted > 280;
@@ -1060,10 +1121,10 @@
       }
     }
 
-    topbarToggle.addEventListener('click', () => {
+    detailsToggle.addEventListener('click', () => {
       if (isDesktopLayout()) return;
-      topbar.classList.toggle('open');
-      syncTopbarState();
+      detailsPanel.classList.toggle('open');
+      syncDetailsState();
     });
 
     sheetToggle.addEventListener('click', () => {
@@ -1079,17 +1140,17 @@
     });
 
     window.addEventListener('resize', () => {
+      updateMobileSheetLayout();
       if (isDesktopLayout()) {
-        topbar.classList.add('open');
+        detailsPanel.classList.add('open');
         sheet.classList.add('open');
       }
-      updateDesktopLayout();
-      syncTopbarState();
+      syncDetailsState();
       syncSheetState();
     });
 
     recordList.addEventListener('scroll', () => {
-      if (renderCursor >= records.length) return;
+      if (renderCursor >= visibleRecords.length) return;
       if ((recordList.scrollTop + recordList.clientHeight) >= (recordList.scrollHeight - 240)) {
         renderNextBatch();
       }
@@ -1110,8 +1171,8 @@
         }
         renderFilterControls();
         applyActiveFilter(true);
-        updateDesktopLayout();
-        syncTopbarState();
+        updateMobileSheetLayout();
+        syncDetailsState();
         syncSheetState();
       })
       .catch((error) => {
