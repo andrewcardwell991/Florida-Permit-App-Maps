@@ -1,0 +1,74 @@
+{
+  "display_title": "Osceola Batch Smoke 2026-04-25",
+  "title": "Osceola Batch Smoke 2026-04-25",
+  "subtitle": "Marker priority is driven by roof age so older roofs stand out first. Click any address in the left list to jump straight to that property and open the full map details.",
+  "county": "Osceola",
+  "map_standard_version": "2026-04-21-v1",
+  "share_expiration_days": 7,
+  "share_generated_at_utc": "2026-04-25T16:23:39Z",
+  "share_expires_at_utc": "2026-05-02T16:23:39Z",
+  "source_output_csv": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\artifacts\\osceola_batch_verification_2026-04-25\\osceola_app_smoke_output.csv",
+  "source_output_html": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\artifacts\\osceola_batch_verification_2026-04-25\\osceola_map_20260425_122325.html",
+  "rows_in_output": 7,
+  "unique_rows": 7,
+  "markers_shown": 7,
+  "generated_at_utc": "2026-04-25T16:23:39Z",
+  "expires_at_utc": "2026-05-02T16:23:39Z",
+  "map_details": {
+    "rows_in_output": 7,
+    "unique_rows": 7,
+    "markers_shown": 7,
+    "duplicates_hidden": 0,
+    "errors_hidden": 0,
+    "categories": [
+      {
+        "key": "age_21_plus",
+        "label": "21+",
+        "count": 0,
+        "percent_of_unique_rows": 0.0,
+        "filterable": true,
+        "color": "#dc2626"
+      },
+      {
+        "key": "age_16_20",
+        "label": "16-20",
+        "count": 0,
+        "percent_of_unique_rows": 0.0,
+        "filterable": true,
+        "color": "#fb923c"
+      },
+      {
+        "key": "age_11_15",
+        "label": "11-15",
+        "count": 1,
+        "percent_of_unique_rows": 14.3,
+        "filterable": true,
+        "color": "#facc15"
+      },
+      {
+        "key": "age_0_10",
+        "label": "0-10",
+        "count": 3,
+        "percent_of_unique_rows": 42.9,
+        "filterable": true,
+        "color": "#dbe4ee"
+      },
+      {
+        "key": "no_data",
+        "label": "NO DATA",
+        "count": 3,
+        "percent_of_unique_rows": 42.9,
+        "filterable": true,
+        "color": "#1f2937"
+      },
+      {
+        "key": "errors",
+        "label": "ERROR hidden",
+        "count": 0,
+        "percent_of_unique_rows": 0.0,
+        "filterable": false,
+        "color": "#475569"
+      }
+    ]
+  }
+}
