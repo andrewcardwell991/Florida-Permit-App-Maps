@@ -1,0 +1,74 @@
+{
+  "display_title": "Jose House 1 mile",
+  "title": "Jose House 1 mile",
+  "subtitle": "Marker priority is driven by roof age so older roofs stand out first. Click any address in the left list to jump straight to that property and open the full map details.",
+  "county": "Osceola",
+  "map_standard_version": "2026-04-21-v1",
+  "share_expiration_days": 365,
+  "share_generated_at_utc": "2026-04-26T23:18:14Z",
+  "share_expires_at_utc": "2027-04-26T23:18:14Z",
+  "source_output_csv": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\osceola_output_20260426_184317.csv",
+  "source_output_html": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\osceola_map_20260426_184317.html",
+  "rows_in_output": 1691,
+  "unique_rows": 1691,
+  "markers_shown": 1666,
+  "generated_at_utc": "2026-04-26T23:18:14Z",
+  "expires_at_utc": "2027-04-26T23:18:14Z",
+  "map_details": {
+    "rows_in_output": 1691,
+    "unique_rows": 1691,
+    "markers_shown": 1666,
+    "duplicates_hidden": 0,
+    "errors_hidden": 1,
+    "categories": [
+      {
+        "key": "age_21_plus",
+        "label": "21+",
+        "count": 317,
+        "percent_of_unique_rows": 18.7,
+        "filterable": true,
+        "color": "#dc2626"
+      },
+      {
+        "key": "age_16_20",
+        "label": "16-20",
+        "count": 45,
+        "percent_of_unique_rows": 2.7,
+        "filterable": true,
+        "color": "#fb923c"
+      },
+      {
+        "key": "age_11_15",
+        "label": "11-15",
+        "count": 106,
+        "percent_of_unique_rows": 6.3,
+        "filterable": true,
+        "color": "#facc15"
+      },
+      {
+        "key": "age_0_10",
+        "label": "0-10",
+        "count": 1081,
+        "percent_of_unique_rows": 63.9,
+        "filterable": true,
+        "color": "#dbe4ee"
+      },
+      {
+        "key": "no_data",
+        "label": "NO DATA",
+        "count": 141,
+        "percent_of_unique_rows": 8.3,
+        "filterable": true,
+        "color": "#1f2937"
+      },
+      {
+        "key": "errors",
+        "label": "ERROR hidden",
+        "count": 1,
+        "percent_of_unique_rows": 0.1,
+        "filterable": false,
+        "color": "#475569"
+      }
+    ]
+  }
+}
