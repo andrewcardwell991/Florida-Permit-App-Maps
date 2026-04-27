@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="map-standard-version" content="2026-04-21-v1" />
+  <meta name="display-title" content="Eric House 1 mile" />
+  <meta name="share-expiration-days" content="365" />
+  <meta name="share-generated-at-utc" content="2026-04-27T00:10:15Z" />
+  <meta name="share-expires-at-utc" content="2027-04-27T00:10:15Z" />
+  <title>Eric House 1 mile</title>
+  <link rel="stylesheet" href="assets/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="assets/markercluster/MarkerCluster.css" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #04090b;
+      --surface: rgba(8, 14, 18, 0.92);
+      --surface-solid: #071117;
+      --surface-strong: rgba(8, 14, 18, 0.97);
+      --border: rgba(99, 179, 237, 0.18);
+      --text: #edf7f3;
+      --muted: #a4bbc1;
+      --accent: #7ee7b5;
+      --accent-strong: #2fd68a;
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+      --desktop-sidebar-width: clamp(360px, 30vw, 520px);
+      --app-height: 100dvh;
+      --mobile-sheet-open-height: calc(var(--app-height) * 0.66);
+      --mobile-sheet-peek-height: 84px;
+    }
+    * { box-sizing: border-box; }
+    html {
+      height: 100%;
+      height: -webkit-fill-available;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+    }
+    body {
+      min-height: 100vh;
+      min-height: 100svh;
+      min-height: 100dvh;
+    }
+    button, input, select {
+      font: inherit;
+    }
+    .app {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      height: 100svh;
+      height: 100dvh;
+      min-height: -webkit-fill-available;
+      background: #020608;
+      overflow: hidden;
+    }
+    body.expired-mode {
+      overflow: auto;
+    }
+    body.expired-mode .app {
+      min-height: 100vh;
+      min-height: 100svh;
+      min-height: 100dvh;
+      height: auto;
+      overflow: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: max(24px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+      background:
+        radial-gradient(circle at top, rgba(126, 231, 181, 0.12), transparent 38%),
+        linear-gradient(180deg, #03080b 0%, #071117 100%);
+    }
+    body.expired-mode #map,
+    body.expired-mode .sidebar,
+    body.expired-mode .floating-toggle,
+    body.expired-mode .location-toggle,
+    body.expired-mode .location-status {
+      display: none !important;
+    }
+    .expired-shell {
+      display: none;
+      width: min(760px, 100%);
+      padding: 28px;
+      border-radius: 28px;
+      background: rgba(8, 14, 18, 0.96);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    body.expired-mode .expired-shell {
+      display: block;
+    }
+    .expired-eyebrow {
+      margin: 0 0 10px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .expired-shell h1 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 5vw, 44px);
+      line-height: 1.05;
+    }
+    .expired-copy {
+      margin: 0 0 22px;
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+    .expired-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .expired-card {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .expired-card-label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .expired-card-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .expired-note {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+    #map {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: #03070a;
+    }
+    .sidebar {
+      pointer-events: none;
+    }
+    .glass {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      pointer-events: auto;
+    }
+    .floating-toggle {
+      border: none;
+      border-radius: 999px;
+      background: rgba(7, 17, 23, 0.94);
+      color: var(--text);
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28);
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .topbar-toggle {
+      position: absolute;
+      top: max(12px, env(safe-area-inset-top));
+      right: max(12px, env(safe-area-inset-right));
+      z-index: 940;
+    }
+    .sheet-toggle {
+      position: absolute;
+      right: max(12px, env(safe-area-inset-right));
+      bottom: calc(env(safe-area-inset-bottom) + 12px);
+      z-index: 940;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .sheet-toggle.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(18px);
+    }
+    .location-toggle {
+      position: absolute;
+      right: max(14px, env(safe-area-inset-right));
+      bottom: calc(112px + env(safe-area-inset-bottom));
+      z-index: 940;
+      min-height: 46px;
+      padding: 0 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(126, 231, 181, 0.32);
+      background: rgba(7, 17, 23, 0.92);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      font-weight: 900;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .location-toggle:hover {
+      border-color: rgba(126, 231, 181, 0.62);
+      background: rgba(10, 27, 32, 0.96);
+    }
+    .location-toggle.active {
+      color: #042016;
+      background: var(--accent);
+      border-color: rgba(126, 231, 181, 0.88);
+    }
+    .location-status {
+      position: absolute;
+      right: max(14px, env(safe-area-inset-right));
+      bottom: calc(166px + env(safe-area-inset-bottom));
+      z-index: 940;
+      max-width: min(320px, calc(100vw - 28px));
+      padding: 9px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(126, 231, 181, 0.22);
+      background: rgba(7, 17, 23, 0.92);
+      color: var(--muted);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+      font-size: 12px;
+      line-height: 1.35;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+    .location-status.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .user-location-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: #38bdf8;
+      border: 3px solid #ffffff;
+      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.28), 0 8px 20px rgba(0, 0, 0, 0.32);
+    }
+    .details-panel {
+      position: absolute;
+      top: max(12px, env(safe-area-inset-top));
+      right: max(12px, env(safe-area-inset-right));
+      width: min(360px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+      z-index: 930;
+      transform: translateY(calc(-100% - 14px));
+      opacity: 0;
+      visibility: hidden;
+      transition: transform 0.24s ease, opacity 0.2s ease, visibility 0.2s ease;
+      overflow: hidden auto;
+      max-height: min(58vh, 58svh, 58dvh, 620px);
+      overscroll-behavior: contain;
+    }
+    .details-panel.open {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .panel-title-wrap {
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+    .eyebrow {
+      margin: 0 0 4px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    h1 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .desktop-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      flex: 0 0 auto;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .panel-body {
+      padding: 14px 16px 16px;
+    }
+    .detail-section {
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+    }
+    .detail-section:first-child {
+      margin-top: 0;
+    }
+    .detail-section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+    }
+    .detail-inline-note {
+      text-transform: none;
+      letter-spacing: normal;
+      font-weight: 600;
+      font-size: 11px;
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .detail-card {
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .detail-card .label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .detail-card .value {
+      display: block;
+      font-size: 19px;
+      font-weight: 800;
+    }
+    .detail-breakdown {
+      display: grid;
+      gap: 8px;
+    }
+    .detail-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 12px;
+    }
+    .detail-row-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .detail-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      flex: 0 0 auto;
+    }
+    .detail-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .detail-count {
+      font-weight: 800;
+      min-width: 20px;
+      text-align: right;
+    }
+    .detail-percent {
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+      min-width: 44px;
+      text-align: right;
+    }
+    .detail-note {
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .sheet {
+      position: absolute;
+      left: max(10px, env(safe-area-inset-left));
+      right: max(10px, env(safe-area-inset-right));
+      bottom: calc(env(safe-area-inset-bottom) + 10px);
+      z-index: 910;
+      display: flex;
+      flex-direction: column;
+      min-height: 92px;
+      max-height: min(var(--mobile-sheet-open-height), calc(var(--app-height) - 88px));
+      border-radius: 26px;
+      overflow: hidden;
+      transform: translateY(calc(100% - var(--mobile-sheet-peek-height)));
+      transition: transform 0.24s ease;
+      overscroll-behavior: contain;
+    }
+    .sheet.open {
+      transform: translateY(0);
+    }
+    .sheet-header {
+      padding: 10px 18px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(7, 17, 23, 0.96);
+    }
+    .sheet-handle {
+      width: 54px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.2);
+      margin: 8px auto 10px;
+    }
+    .sheet-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+    .sheet-title-row strong {
+      font-size: 15px;
+    }
+    .sheet-header-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+    .sheet-standard {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .sheet-close {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 8px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .sheet-copy {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .sheet-body {
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      flex: 1 1 auto;
+    }
+    .sheet-subheader {
+      display: grid;
+      gap: 10px;
+      padding: 10px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(7, 17, 23, 0.96);
+      z-index: 2;
+      position: sticky;
+      top: 0;
+    }
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      padding-bottom: 2px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .filter-row::-webkit-scrollbar {
+      display: none;
+    }
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    }
+    .filter-chip:active {
+      transform: translateY(1px);
+    }
+    .filter-chip.active {
+      background: rgba(126, 231, 181, 0.14);
+      border-color: rgba(126, 231, 181, 0.48);
+      box-shadow: 0 0 0 1px rgba(126, 231, 181, 0.18);
+    }
+    .filter-chip-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      flex: 0 0 auto;
+    }
+    .filter-chip-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .list-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+    .record-list {
+      overflow-y: auto;
+      padding: 12px 14px calc(96px + env(safe-area-inset-bottom));
+      display: grid;
+      gap: 10px;
+      -webkit-overflow-scrolling: touch;
+      flex: 1 1 auto;
+    }
+    .record {
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 12px;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+    }
+    .record.active {
+      border-color: rgba(126, 231, 181, 0.56);
+      box-shadow: 0 0 0 1px rgba(126, 231, 181, 0.42), 0 10px 24px rgba(0, 0, 0, 0.28);
+    }
+    .record button {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+      padding: 0;
+      cursor: pointer;
+    }
+    .record-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #0b1114;
+      background: #ffffff;
+    }
+    .record-title {
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.35;
+      margin-bottom: 8px;
+      word-break: break-word;
+    }
+    .record-age {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+    }
+    .record-meta {
+      display: grid;
+      gap: 4px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .record-note {
+      margin-top: 10px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #fcd34d;
+    }
+    .record-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .record-actions a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .record-actions a:hover {
+      text-decoration: underline;
+    }
+    .loading-state, .empty-state {
+      padding: 18px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+    .map-pin {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      font-weight: 900;
+      line-height: 1;
+      color: var(--marker-text);
+      background: var(--marker-bg);
+      border: 2px solid var(--marker-border);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.82), 0 4px 12px rgba(0, 0, 0, 0.18);
+    }
+    .custom-map-marker {
+      background: transparent;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .map-pin.size-tiny {
+      width: 10px;
+      height: 10px;
+      font-size: 9px;
+      border-width: 1.5px;
+    }
+    .map-pin.size-small {
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+    }
+    .map-pin.size-medium {
+      width: 22px;
+      height: 22px;
+      font-size: 13px;
+    }
+    .map-pin.size-large {
+      width: 30px;
+      height: 30px;
+      font-size: 15px;
+    }
+    .leaflet-popup-content-wrapper {
+      border-radius: 18px;
+      background: rgba(7, 17, 23, 0.95);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .leaflet-popup-content {
+      margin: 14px 16px;
+      min-width: min(240px, 72vw);
+      line-height: 1.45;
+      font-size: 13px;
+    }
+    .leaflet-popup-tip {
+      background: rgba(7, 17, 23, 0.95);
+    }
+    .popup-chip {
+      display: inline-flex;
+      align-items: center;
+      margin-bottom: 8px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      border: 1px solid;
+    }
+    .popup-title {
+      font-weight: 800;
+      margin-bottom: 8px;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+    .popup-emphasis {
+      display: inline;
+      font-weight: 900;
+      color: #ffffff;
+    }
+    .popup-age-value {
+      color: #facc15;
+    }
+    .popup-row {
+      margin-top: 4px;
+      word-break: break-word;
+    }
+    .popup-link {
+      display: inline-block;
+      margin-top: 10px;
+      color: var(--accent);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .popup-link:hover {
+      text-decoration: underline;
+    }
+    .cluster-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      color: #ffffff;
+      font-weight: 800;
+      border: 2px solid rgba(255, 255, 255, 0.78);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      background: linear-gradient(180deg, #1f2937 0%, #0f172a 100%);
+    }
+    .cluster-icon.priority {
+      background: linear-gradient(180deg, #dc2626 0%, #991b1b 100%);
+    }
+    @media (min-width: 1025px) {
+      .sidebar {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        bottom: 12px;
+        width: var(--desktop-sidebar-width);
+        z-index: 930;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        pointer-events: none;
+      }
+      .floating-toggle {
+        display: none;
+      }
+      .location-toggle {
+        right: 18px;
+        bottom: 18px;
+      }
+      .location-status {
+        right: 18px;
+        bottom: 76px;
+      }
+      .desktop-toggle {
+        display: inline-flex;
+      }
+      .details-panel {
+        position: relative;
+        top: auto;
+        right: auto;
+        width: 100%;
+        transform: none;
+        opacity: 1;
+        visibility: visible;
+        max-height: none;
+        overflow: hidden;
+        flex: 0 0 auto;
+      }
+      .details-panel.desktop-collapsed .panel-body {
+        display: none;
+      }
+      .sheet {
+        position: relative;
+        left: auto;
+        right: auto;
+        bottom: auto;
+        transform: none;
+        min-height: 0;
+        max-height: none;
+        flex: 1 1 auto;
+      }
+      .sheet .sheet-handle {
+        display: none;
+      }
+      .sheet .sheet-close {
+        display: none;
+      }
+      .sheet.desktop-collapsed {
+        flex: 0 0 auto;
+      }
+      .sheet.desktop-collapsed .sheet-copy,
+      .sheet.desktop-collapsed .sheet-body {
+        display: none;
+      }
+      .sheet-header {
+        padding: 14px 16px 12px;
+      }
+      .sheet-copy {
+        margin-top: 6px;
+      }
+      .sheet-body {
+        min-height: 0;
+      }
+      .sheet-subheader {
+        position: static;
+      }
+      .filter-row {
+        flex-wrap: wrap;
+        overflow-x: visible;
+        scrollbar-width: auto;
+      }
+      .filter-row::-webkit-scrollbar {
+        display: block;
+        height: 8px;
+      }
+      .filter-row::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.14);
+        border-radius: 999px;
+      }
+      .record-list {
+        padding-bottom: 18px;
+      }
+      #map {
+        left: calc(var(--desktop-sidebar-width) + 24px);
+        width: calc(100% - var(--desktop-sidebar-width) - 24px);
+      }
+    }
+    @media (max-width: 640px) and (orientation: portrait) {
+      .details-panel {
+        width: min(320px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+      }
+      .panel-header {
+        padding: 14px 14px 8px;
+      }
+      h1 {
+        font-size: 16px;
+      }
+      .subtitle {
+        font-size: 12px;
+      }
+      .panel-body {
+        padding: 12px 14px 14px;
+      }
+      .detail-grid {
+        gap: 6px;
+      }
+      .detail-card {
+        padding: 8px 10px;
+      }
+      .detail-card .value {
+        font-size: 17px;
+      }
+      .detail-row {
+        padding: 7px 8px;
+      }
+      .sheet {
+        max-height: min(var(--mobile-sheet-open-height), calc(var(--app-height) - 82px));
+      }
+      .sheet-header {
+        padding: 8px 12px 8px;
+      }
+      .sheet-title-row {
+        margin-bottom: 0;
+      }
+      .sheet-standard {
+        display: none;
+      }
+      .sheet-close {
+        display: inline-flex;
+      }
+      .sheet-copy {
+        display: none;
+      }
+      .sheet-subheader {
+        gap: 8px;
+        padding: 8px 12px;
+      }
+      .record-list {
+        padding: 10px 12px calc(76px + env(safe-area-inset-bottom));
+      }
+      .location-toggle {
+        bottom: calc(96px + env(safe-area-inset-bottom));
+      }
+      .location-status {
+        bottom: calc(150px + env(safe-area-inset-bottom));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div id="map"></div>
+    <button id="details-toggle" class="floating-toggle topbar-toggle" type="button" aria-expanded="false">Map details</button>
+    <button id="location-toggle" class="location-toggle" type="button" aria-pressed="false">My location</button>
+    <div id="location-status" class="location-status" role="status" aria-live="polite"></div>
+    <button id="sheet-toggle" class="floating-toggle sheet-toggle" type="button">Show addresses</button>
+    <section id="expired-shell" class="expired-shell">
+      <p class="expired-eyebrow">Public Map Link Expired</p>
+      <h1 id="expired-title">Eric House 1 mile</h1>
+      <p class="expired-copy">This public map link has expired and is no longer available for public viewing. The owner can republish the map from the desktop app if it still needs to be shared.</p>
+      <div class="expired-grid">
+        <div class="expired-card">
+          <span class="expired-card-label">County</span>
+          <span id="expired-county" class="expired-card-value">Osceola</span>
+        </div>
+        <div class="expired-card">
+          <span class="expired-card-label">Generated</span>
+          <span id="expired-generated" class="expired-card-value">--</span>
+        </div>
+        <div class="expired-card">
+          <span class="expired-card-label">Expired</span>
+          <span id="expired-date" class="expired-card-value">--</span>
+        </div>
+        <div class="expired-card">
+          <span class="expired-card-label">Lifetime</span>
+          <span id="expired-days" class="expired-card-value">365 day(s)</span>
+        </div>
+      </div>
+      <p class="expired-note">Public links follow the repo-wide map standard. The default lifetime is 30 days, and owners can choose any lifetime from 1 to 365 days before publishing.</p>
+    </section>
+
+    <aside class="sidebar">
+      <section id="details-panel" class="details-panel glass">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <p class="eyebrow">Florida Permit Intelligence Beta</p>
+            <h1 id="map-display-title">Eric House 1 mile</h1>
+            <p class="subtitle">Marker priority is driven by roof age so older roofs stand out first. Click any address in the left list to jump straight to that property and open the full map details.</p>
+          </div>
+          <button id="desktop-details-toggle" class="desktop-toggle" type="button" aria-expanded="true" aria-label="Collapse map details">▾</button>
+        </div>
+        <div id="details-body" class="panel-body">
+          <div class="detail-section">
+            <div class="detail-section-title">
+              <span>Map details</span>
+              <span class="detail-inline-note">Percent of unique rows</span>
+            </div>
+            <div class="detail-grid">
+              <div class="detail-card"><span class="label">Rows in output</span><span class="value">2565</span></div><div class="detail-card"><span class="label">Unique rows</span><span class="value">2565</span></div><div class="detail-card"><span class="label">Markers shown</span><span class="value">2483</span></div><div class="detail-card"><span class="label">Duplicates hidden</span><span class="value">0</span></div><div class="detail-card"><span class="label">Errors hidden</span><span class="value">77</span></div>
+            </div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-section-title">
+              <span>Row outcomes</span>
+              <span class="detail-inline-note">Osceola</span>
+            </div>
+            <div class="detail-breakdown">
+              <div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#dc2626;"></span><span class="detail-label">21+</span></span><span class="detail-count">31</span><span class="detail-percent">1.2%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#fb923c;"></span><span class="detail-label">16-20</span></span><span class="detail-count">6</span><span class="detail-percent">0.2%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#facc15;"></span><span class="detail-label">11-15</span></span><span class="detail-count">17</span><span class="detail-percent">0.7%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#dbe4ee;"></span><span class="detail-label">0-10</span></span><span class="detail-count">2337</span><span class="detail-percent">91.1%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#1f2937;"></span><span class="detail-label">NO DATA</span></span><span class="detail-count">97</span><span class="detail-percent">3.8%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#475569;"></span><span class="detail-label">ERROR hidden</span></span><span class="detail-count">77</span><span class="detail-percent">3.0%</span></div>
+            </div>
+            <div class="detail-note">The filter chips in the property panel are the only clickable category controls. ERROR hidden stays counted but never plots as a pin. Public link expires after 365 day(s).</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="sheet" class="sheet glass">
+        <div class="sheet-header">
+          <div class="sheet-handle"></div>
+          <div class="sheet-title-row">
+            <strong>Property list</strong>
+            <div class="sheet-header-actions">
+              <span class="sheet-standard">Map standard 2026-04-21-v1</span>
+              <button id="desktop-sheet-toggle" class="desktop-toggle" type="button" aria-expanded="true" aria-label="Collapse property list">▾</button>
+              <button id="sheet-close" class="sheet-close" type="button">Hide</button>
+            </div>
+          </div>
+          <div class="sheet-copy">Mobile-friendly public map link. Tap any property to center the map and open its details. Error rows stay counted but do not plot as pins.</div>
+        </div>
+        <div id="sheet-body" class="sheet-body">
+          <div class="sheet-subheader">
+            <div id="filter-row" class="filter-row" aria-label="Map category filters"></div>
+            <div class="list-toolbar">
+              <span id="list-status">Loading records...</span>
+              <span>0 duplicate row(s) hidden</span>
+            </div>
+          </div>
+          <div id="record-list" class="record-list">
+            <div class="loading-state">Loading map records...</div>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+  </div>
+
+  <script src="assets/leaflet/leaflet.js"></script>
+  <script src="assets/markercluster/leaflet.markercluster.js"></script>
+  <script>
+    const MAP_STANDARD_VERSION = "2026-04-21-v1";
+    const MAP_DETAILS = {"rows_in_output": 2565, "unique_rows": 2565, "markers_shown": 2483, "duplicates_hidden": 0, "errors_hidden": 77, "categories": [{"key": "age_21_plus", "label": "21+", "count": 31, "percent_of_unique_rows": 1.2, "filterable": true, "color": "#dc2626"}, {"key": "age_16_20", "label": "16-20", "count": 6, "percent_of_unique_rows": 0.2, "filterable": true, "color": "#fb923c"}, {"key": "age_11_15", "label": "11-15", "count": 17, "percent_of_unique_rows": 0.7, "filterable": true, "color": "#facc15"}, {"key": "age_0_10", "label": "0-10", "count": 2337, "percent_of_unique_rows": 91.1, "filterable": true, "color": "#dbe4ee"}, {"key": "no_data", "label": "NO DATA", "count": 97, "percent_of_unique_rows": 3.8, "filterable": true, "color": "#1f2937"}, {"key": "errors", "label": "ERROR hidden", "count": 77, "percent_of_unique_rows": 3.0, "filterable": false, "color": "#475569"}]};
+    const DEFAULT_CENTER = [28.35, -81.45];
+    const SHARE_EXPIRATION_DAYS = 365;
+    const SHARE_GENERATED_AT_UTC = "2026-04-27T00:10:15Z";
+    const SHARE_EXPIRES_AT_UTC = "2027-04-27T00:10:15Z";
+    const detailsPanel = document.getElementById('details-panel');
+    const detailsBody = document.getElementById('details-body');
+    const detailsToggle = document.getElementById('details-toggle');
+    const desktopDetailsToggle = document.getElementById('desktop-details-toggle');
+    const sheet = document.getElementById('sheet');
+    const sheetBody = document.getElementById('sheet-body');
+    const sheetToggle = document.getElementById('sheet-toggle');
+    const sheetClose = document.getElementById('sheet-close');
+    const desktopSheetToggle = document.getElementById('desktop-sheet-toggle');
+    const locationToggle = document.getElementById('location-toggle');
+    const locationStatus = document.getElementById('location-status');
+    const filterRow = document.getElementById('filter-row');
+    const recordList = document.getElementById('record-list');
+    const listStatus = document.getElementById('list-status');
+    const expiredTitle = document.getElementById('expired-title');
+    const expiredCounty = document.getElementById('expired-county');
+    const expiredGenerated = document.getElementById('expired-generated');
+    const expiredDate = document.getElementById('expired-date');
+    const expiredDays = document.getElementById('expired-days');
+
+    const MARKER_STYLES = {
+      age_21_plus: { label: '21+ years', bg: '#dc2626', border: '#991b1b', text: '#ffffff', symbol: '&#10084;', size: 30, priority: true },
+      age_16_20: { label: '16-20 years', bg: '#fb923c', border: '#ea580c', text: '#431407', symbol: '', size: 22, priority: true },
+      age_11_15: { label: '11-15 years', bg: '#facc15', border: '#ca8a04', text: '#422006', symbol: '', size: 20, priority: true },
+      age_0_10: { label: '0-10 years', bg: '#dbe4ee', border: '#64748b', text: '#334155', symbol: '', size: 10, priority: false },
+      age_unknown: { label: 'Age not calculated', bg: '#e2e8f0', border: '#64748b', text: '#334155', symbol: '!', size: 14, priority: false },
+      no_data: { label: 'No data', bg: '#1f2937', border: '#0f172a', text: '#ffffff', symbol: '?', size: 14, priority: false },
+    };
+    const LOW_PRIORITY_GROUPS = new Set(['age_0_10', 'age_unknown', 'no_data']);
+    const FILTER_OPTIONS = [
+      { key: 'all', label: 'All', count: MAP_DETAILS.markers_shown, color: '#7ee7b5' },
+      ...MAP_DETAILS.categories
+        .filter((category) => category.filterable && Number(category.count || 0) > 0)
+        .map((category) => {
+          return { key: category.key, label: category.label, count: Number(category.count || 0), color: category.color };
+        }),
+    ];
+
+    const recordCardById = new Map();
+    const markerById = new Map();
+    const recordById = new Map();
+    const filterButtonByKey = new Map();
+    let clusterLayer = null;
+    let records = [];
+    let visibleRecords = [];
+    let renderCursor = 0;
+    let activeFilterKey = 'all';
+    let desktopDetailsCollapsed = false;
+    let desktopSheetCollapsed = false;
+    let locationWatchId = null;
+    let userLocationMarker = null;
+    let userAccuracyCircle = null;
+    let userLocationStatusTimer = null;
+    let shouldFollowLocation = false;
+
+    function isDesktopLayout() {
+      return window.innerWidth >= 1025;
+    }
+
+    function updateViewportVars() {
+      const appHeight = Math.max(window.innerHeight || 0, 320);
+      const openHeight = Math.max(320, Math.round(appHeight * 0.66));
+      document.documentElement.style.setProperty('--app-height', `${appHeight}px`);
+      document.documentElement.style.setProperty('--mobile-sheet-open-height', `${openHeight}px`);
+    }
+
+    function escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function parseUtcDate(value) {
+      const time = Date.parse(String(value || '').trim());
+      return Number.isFinite(time) ? time : null;
+    }
+
+    function formatLocalDate(value) {
+      const time = parseUtcDate(value);
+      if (time === null) {
+        return '--';
+      }
+      try {
+        return new Date(time).toLocaleString(undefined, {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+        });
+      } catch (error) {
+        return new Date(time).toLocaleString();
+      }
+    }
+
+    function shareIsExpired() {
+      const expiresAt = parseUtcDate(SHARE_EXPIRES_AT_UTC);
+      return expiresAt !== null && Date.now() >= expiresAt;
+    }
+
+    function showExpiredView() {
+      document.body.classList.add('expired-mode');
+      expiredTitle.textContent = "Eric House 1 mile";
+      expiredCounty.textContent = "Osceola";
+      expiredGenerated.textContent = formatLocalDate(SHARE_GENERATED_AT_UTC);
+      expiredDate.textContent = formatLocalDate(SHARE_EXPIRES_AT_UTC);
+      expiredDays.textContent = `${SHARE_EXPIRATION_DAYS} day(s)`;
+    }
+
+    function scheduleExpirationGate() {
+      const expiresAt = parseUtcDate(SHARE_EXPIRES_AT_UTC);
+      if (expiresAt === null) {
+        return;
+      }
+      function queueCheck() {
+        const remaining = expiresAt - Date.now();
+        if (remaining <= 0) {
+          showExpiredView();
+          return;
+        }
+        window.setTimeout(queueCheck, Math.min(remaining, 2147483647));
+      }
+      queueCheck();
+    }
+
+    function markerStyle(record) {
+      return MARKER_STYLES[record.marker_group] || MARKER_STYLES.age_0_10;
+    }
+
+    function setLocationStatus(message, persist) {
+      if (!locationStatus) {
+        return;
+      }
+      locationStatus.textContent = message || '';
+      locationStatus.classList.toggle('visible', Boolean(message));
+      if (userLocationStatusTimer) {
+        window.clearTimeout(userLocationStatusTimer);
+        userLocationStatusTimer = null;
+      }
+      if (message && !persist) {
+        userLocationStatusTimer = window.setTimeout(() => {
+          locationStatus.classList.remove('visible');
+        }, 4200);
+      }
+    }
+
+    function userLocationIcon() {
+      return L.divIcon({
+        className: 'user-location-marker',
+        html: '<div class="user-location-dot"></div>',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+      });
+    }
+
+    function updateUserLocation(position) {
+      const coords = position && position.coords ? position.coords : null;
+      if (!coords || !Number.isFinite(coords.latitude) || !Number.isFinite(coords.longitude)) {
+        return;
+      }
+      const latLng = [coords.latitude, coords.longitude];
+      const accuracy = Number.isFinite(coords.accuracy) ? Math.max(coords.accuracy, 8) : 25;
+      if (!userLocationMarker) {
+        userLocationMarker = L.marker(latLng, {
+          icon: userLocationIcon(),
+          zIndexOffset: 100000,
+          keyboard: false,
+        }).addTo(map);
+      } else {
+        userLocationMarker.setLatLng(latLng);
+      }
+      if (!userAccuracyCircle) {
+        userAccuracyCircle = L.circle(latLng, {
+          radius: accuracy,
+          color: '#38bdf8',
+          weight: 2,
+          opacity: 0.78,
+          fillColor: '#38bdf8',
+          fillOpacity: 0.14,
+        }).addTo(map);
+      } else {
+        userAccuracyCircle.setLatLng(latLng);
+        userAccuracyCircle.setRadius(accuracy);
+      }
+      userLocationMarker.bindPopup(`Your location<br><span style="color:#a4bbc1;">Accuracy about ${Math.round(accuracy)} m.</span>`);
+      locationToggle.classList.add('active');
+      locationToggle.setAttribute('aria-pressed', 'true');
+      locationToggle.textContent = 'Following';
+      setLocationStatus(`Location shown. Accuracy about ${Math.round(accuracy)}.`, false);
+      if (shouldFollowLocation) {
+        map.setView(latLng, Math.max(map.getZoom(), 17), { animate: true });
+      }
+    }
+
+    function handleLocationError(error) {
+      shouldFollowLocation = false;
+      locationToggle.classList.remove('active');
+      locationToggle.setAttribute('aria-pressed', 'false');
+      locationToggle.textContent = 'My location';
+      const denied = error && error.code === 1;
+      setLocationStatus(denied ? 'Location permission was denied.' : 'Location is unavailable right now.', true);
+    }
+
+    function startLocationWatch() {
+      if (!navigator.geolocation) {
+        setLocationStatus('This browser does not support location.', true);
+        return;
+      }
+      shouldFollowLocation = true;
+      locationToggle.textContent = 'Locating...';
+      setLocationStatus('Asking for your location...', true);
+      if (locationWatchId === null) {
+        locationWatchId = navigator.geolocation.watchPosition(updateUserLocation, handleLocationError, {
+          enableHighAccuracy: true,
+          maximumAge: 10000,
+          timeout: 15000,
+        });
+      } else if (userLocationMarker) {
+        map.setView(userLocationMarker.getLatLng(), Math.max(map.getZoom(), 17), { animate: true });
+        setLocationStatus('Recentered on your location.', false);
+      }
+    }
+
+    function isTouchDevice() {
+      return Boolean(window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || Number(navigator.maxTouchPoints || 0) > 0;
+    }
+
+    function markerHitSize(style) {
+      const visualSize = Number(style.size || 22);
+      return isTouchDevice() && visualSize <= 14 ? 30 : visualSize;
+    }
+
+    function syncDetailsState() {
+      if (isDesktopLayout()) {
+        detailsPanel.classList.add('open');
+        detailsPanel.classList.toggle('desktop-collapsed', desktopDetailsCollapsed);
+        desktopDetailsToggle.setAttribute('aria-expanded', desktopDetailsCollapsed ? 'false' : 'true');
+        desktopDetailsToggle.textContent = desktopDetailsCollapsed ? '▸' : '▾';
+        detailsToggle.setAttribute('aria-expanded', 'true');
+        detailsToggle.textContent = 'Map details';
+        return;
+      }
+      detailsPanel.classList.remove('desktop-collapsed');
+      const open = detailsPanel.classList.contains('open');
+      detailsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      detailsToggle.textContent = open ? 'Hide map info' : 'Map details';
+    }
+
+    function syncSheetState() {
+      if (isDesktopLayout()) {
+        sheet.classList.add('open');
+        sheet.classList.toggle('desktop-collapsed', desktopSheetCollapsed);
+        desktopSheetToggle.setAttribute('aria-expanded', desktopSheetCollapsed ? 'false' : 'true');
+        desktopSheetToggle.textContent = desktopSheetCollapsed ? '▸' : '▾';
+        sheetToggle.classList.remove('hidden');
+        sheetToggle.textContent = 'Addresses';
+        sheetClose.hidden = true;
+        return;
+      }
+      sheet.classList.remove('desktop-collapsed');
+      const open = sheet.classList.contains('open');
+      sheetToggle.classList.toggle('hidden', open);
+      sheetToggle.textContent = open ? 'Hide addresses' : 'Show addresses';
+      sheetClose.hidden = !open;
+    }
+
+    function activeFilterOption() {
+      return FILTER_OPTIONS.find((option) => option.key === activeFilterKey) || FILTER_OPTIONS[0];
+    }
+
+    function filterRecords() {
+      if (activeFilterKey === 'all') {
+        return records.slice();
+      }
+      return records.filter((record) => record.marker_group === activeFilterKey);
+    }
+
+    function syncFilterButtons() {
+      filterButtonByKey.forEach((button, key) => {
+        button.classList.toggle('active', key === activeFilterKey);
+      });
+    }
+
+    function renderFilterControls() {
+      filterRow.innerHTML = '';
+      filterButtonByKey.clear();
+      FILTER_OPTIONS.forEach((option) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'filter-chip';
+        button.innerHTML = `
+          <span class="filter-chip-dot" style="background:${option.color};"></span>
+          <span>${escapeHtml(option.label)}</span>
+          <span class="filter-chip-count">${option.count}</span>
+        `;
+        button.addEventListener('click', () => {
+          if (activeFilterKey === option.key) {
+            activeFilterKey = 'all';
+          } else {
+            activeFilterKey = option.key;
+          }
+          syncFilterButtons();
+          applyActiveFilter(true);
+        });
+        filterButtonByKey.set(option.key, button);
+        filterRow.appendChild(button);
+      });
+      syncFilterButtons();
+    }
+
+    function sizeClass(size) {
+      if (size <= 14) return 'size-tiny';
+      if (size >= 30) return 'size-large';
+      if (size >= 22) return 'size-medium';
+      return 'size-small';
+    }
+
+    function buildMarkerIcon(record) {
+      const style = markerStyle(record);
+      const symbol = style.symbol ? `<span>${style.symbol}</span>` : '';
+      const cls = sizeClass(style.size);
+      const htmlText = `<div class="map-pin ${cls}" style="--marker-bg:${style.bg}; --marker-border:${style.border}; --marker-text:${style.text};">${symbol}</div>`;
+      const hitSize = markerHitSize(style);
+      return L.divIcon({
+        className: 'custom-map-marker',
+        html: htmlText,
+        iconSize: [hitSize, hitSize],
+        iconAnchor: [hitSize / 2, hitSize / 2],
+        popupAnchor: [0, -Math.max(12, hitSize / 2)],
+      });
+    }
+
+    function buildPopup(record) {
+      const style = markerStyle(record);
+      const accuracyLine = record.coord_accuracy && record.coord_accuracy !== 'parcel/input'
+        ? `<div class="popup-row" style="color:#facc15;"><b>Map accuracy:</b> ${escapeHtml(record.coord_accuracy)}${record.coord_note ? ' | ' + escapeHtml(record.coord_note) : ''}</div>`
+        : '';
+      return `
+        <div>
+          <div class="popup-chip" style="background:${style.bg}; border-color:${style.border}; color:${style.text};">${escapeHtml(style.label)}</div>
+          <div class="popup-title">${escapeHtml(record.address || 'Address unavailable')}</div>
+          <div class="popup-row"><b>Parcel #:</b> ${escapeHtml(record.parcel || '-')}</div>
+          <div class="popup-row"><b>Owner:</b> <span class="popup-emphasis">${escapeHtml(record.owner || '-')}</span></div>
+          <div class="popup-row"><b>Roof Date:</b> ${escapeHtml(record.roof_date || '-')}</div>
+          <div class="popup-row"><b>Roof Type:</b> ${escapeHtml(record.roof_type || '-')}</div>
+          <div class="popup-row"><b>Roof Age:</b> <span class="popup-emphasis popup-age-value">${escapeHtml(record.roof_age_display || '-')}</span></div>
+          ${accuracyLine}
+          <a class="popup-link" href="${record.maps_url}" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+        </div>
+      `;
+    }
+
+    function setActiveRecord(recordId) {
+      recordCardById.forEach((card, id) => {
+        card.classList.toggle('active', id === recordId);
+      });
+    }
+
+    function focusRecord(recordId) {
+      const marker = markerById.get(recordId);
+      if (!marker) {
+        return false;
+      }
+      const record = recordById.get(recordId);
+      setActiveRecord(recordId);
+      if (!isDesktopLayout()) {
+        detailsPanel.classList.remove('open');
+        sheet.classList.remove('open');
+        syncDetailsState();
+        syncSheetState();
+      }
+      map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 17), { animate: true, duration: 0.25 });
+      marker.bindPopup(buildPopup(record)).openPopup();
+      return true;
+    }
+
+    function recordCard(record) {
+      const style = markerStyle(record);
+      const card = document.createElement('article');
+      card.className = 'record';
+      const note = record.coord_accuracy && record.coord_accuracy !== 'parcel/input'
+        ? `<div class="record-note">Map location: ${escapeHtml(record.coord_accuracy)}${record.coord_note ? ' | ' + escapeHtml(record.coord_note) : ''}</div>`
+        : '';
+      card.innerHTML = `
+        <button type="button">
+          <div class="record-head">
+            <span class="badge" style="background:${style.bg}; color:${style.text};">${escapeHtml(style.label)}</span>
+            <span style="font-size:12px; color:var(--muted);">${escapeHtml(record.roof_type || '')}</span>
+          </div>
+          <div class="record-title">${escapeHtml(record.address || record.parcel || 'Address unavailable')}</div>
+          <div class="record-age">${escapeHtml(record.roof_age_display || '-')}</div>
+          <div class="record-meta">
+            <div>Parcel: ${escapeHtml(record.parcel || '-')}</div>
+            <div>Owner: ${escapeHtml(record.owner || '-')}</div>
+            <div>Roof date: ${escapeHtml(record.roof_date || '-')}</div>
+          </div>
+          ${note}
+        </button>
+        <div class="record-actions">
+          <a href="${record.maps_url}" target="_blank" rel="noopener noreferrer">Google Maps</a>
+        </div>
+      `;
+      card.querySelector('button').addEventListener('click', () => focusRecord(record.id));
+      recordCardById.set(record.id, card);
+      return card;
+    }
+
+    function renderNextBatch() {
+      const next = visibleRecords.slice(renderCursor, renderCursor + 40);
+      next.forEach((record) => recordList.appendChild(recordCard(record)));
+      renderCursor += next.length;
+      const activeLabel = activeFilterOption().label;
+      if (renderCursor >= visibleRecords.length) {
+        listStatus.textContent = activeFilterKey === 'all'
+          ? `${visibleRecords.length} record(s) ready`
+          : `${activeLabel}: ${visibleRecords.length} record(s) ready`;
+      } else {
+        listStatus.textContent = activeFilterKey === 'all'
+          ? `${renderCursor} of ${visibleRecords.length} record(s) shown`
+          : `${activeLabel}: ${renderCursor} of ${visibleRecords.length} shown`;
+      }
+    }
+
+    function resetList() {
+      recordCardById.clear();
+      recordList.innerHTML = '';
+      renderCursor = 0;
+      if (!visibleRecords.length) {
+        recordList.innerHTML = '<div class="empty-state">No plotted records are available for this category.</div>';
+        const activeLabel = activeFilterOption().label;
+        listStatus.textContent = activeFilterKey === 'all'
+          ? '0 record(s) ready'
+          : `${activeLabel}: 0 record(s) ready`;
+        return;
+      }
+      renderNextBatch();
+    }
+
+    function iconCreateFunction(cluster) {
+      const childMarkers = cluster.getAllChildMarkers();
+      const priority = childMarkers.some((marker) => marker.options.markerPriority);
+      return L.divIcon({
+        className: 'custom-cluster-marker',
+        html: `<div class="cluster-icon${priority ? ' priority' : ''}">${cluster.getChildCount()}</div>`,
+        iconSize: [42, 42],
+      });
+    }
+
+    const map = L.map('map', {
+      preferCanvas: true,
+      zoomControl: true,
+      zoomAnimation: true,
+      fadeAnimation: false,
+      markerZoomAnimation: false,
+    }).setView(DEFAULT_CENTER, 10);
+
+    const imageryOptions = {
+      maxZoom: 20,
+      maxNativeZoom: 19,
+      attribution: 'Tiles &copy; Esri',
+      keepBuffer: 3,
+      updateWhenIdle: false,
+      updateWhenZooming: false,
+    };
+    const referenceOptions = {
+      maxZoom: 20,
+      maxNativeZoom: 19,
+      attribution: 'Roads &copy; Esri',
+      keepBuffer: 3,
+      updateWhenIdle: false,
+      updateWhenZooming: false,
+    };
+
+    L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      imageryOptions
+    ).addTo(map);
+    L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',
+      referenceOptions
+    ).addTo(map);
+
+    function rebuildMarkers() {
+      if (clusterLayer) {
+        clusterLayer.clearLayers();
+        map.removeLayer(clusterLayer);
+      }
+      markerById.clear();
+      recordById.clear();
+      const shouldCluster = isDesktopLayout() ? visibleRecords.length > 1200 : visibleRecords.length > 150;
+      clusterLayer = L.markerClusterGroup({
+        disableClusteringAtZoom: isDesktopLayout() ? 17 : 16,
+        animate: false,
+        chunkedLoading: true,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        removeOutsideVisibleBounds: false,
+        maxClusterRadius: isDesktopLayout() ? 40 : 54,
+        iconCreateFunction,
+      });
+      const bounds = [];
+      visibleRecords.forEach((record) => {
+        if (typeof record.map_lat !== 'number' || typeof record.map_lon !== 'number') {
+          return;
+        }
+        const marker = L.marker([record.map_lat, record.map_lon], {
+          icon: buildMarkerIcon(record),
+          markerPriority: Boolean(markerStyle(record).priority),
+        });
+        marker.bindPopup(buildPopup(record));
+        marker.on('click', () => setActiveRecord(record.id));
+        markerById.set(record.id, marker);
+        recordById.set(record.id, record);
+        bounds.push([record.map_lat, record.map_lon]);
+        clusterLayer.addLayer(marker);
+      });
+      clusterLayer.addTo(map);
+      if (bounds.length) {
+        const fitBounds = L.latLngBounds(bounds);
+        map.fitBounds(fitBounds.pad(0.08), { animate: false });
+      }
+    }
+
+    function applyActiveFilter(resetView) {
+      visibleRecords = filterRecords().filter((record) => !record.hide_marker);
+      syncFilterButtons();
+      resetList();
+      rebuildMarkers();
+      if (resetView && visibleRecords.length) {
+        map.closePopup();
+      }
+    }
+
+    recordList.addEventListener('scroll', () => {
+      if (renderCursor >= visibleRecords.length) {
+        return;
+      }
+      const nearBottom = recordList.scrollTop + recordList.clientHeight >= recordList.scrollHeight - 160;
+      if (nearBottom) {
+        renderNextBatch();
+      }
+    });
+
+    detailsToggle.addEventListener('click', () => {
+      if (isDesktopLayout()) {
+        return;
+      }
+      detailsPanel.classList.toggle('open');
+      syncDetailsState();
+    });
+
+    sheetToggle.addEventListener('click', () => {
+      if (isDesktopLayout()) {
+        return;
+      }
+      sheet.classList.add('open');
+      syncSheetState();
+    });
+
+    sheetClose.addEventListener('click', () => {
+      if (isDesktopLayout()) {
+        return;
+      }
+      sheet.classList.remove('open');
+      syncSheetState();
+    });
+
+    locationToggle.addEventListener('click', () => {
+      startLocationWatch();
+    });
+
+    desktopDetailsToggle.addEventListener('click', () => {
+      if (!isDesktopLayout()) {
+        return;
+      }
+      desktopDetailsCollapsed = !desktopDetailsCollapsed;
+      syncDetailsState();
+    });
+
+    desktopSheetToggle.addEventListener('click', () => {
+      if (!isDesktopLayout()) {
+        return;
+      }
+      desktopSheetCollapsed = !desktopSheetCollapsed;
+      syncSheetState();
+    });
+
+    async function loadRecords() {
+      const response = await fetch('records.json', { cache: 'no-store' });
+      const payload = await response.json();
+      records = Array.isArray(payload.records) ? payload.records.filter((record) => !record.hide_marker) : [];
+      visibleRecords = records.slice();
+      renderFilterControls();
+      resetList();
+      rebuildMarkers();
+    }
+
+    window.addEventListener('resize', () => {
+      updateViewportVars();
+      syncDetailsState();
+      syncSheetState();
+      setTimeout(() => map.invalidateSize(false), 50);
+    });
+
+    updateViewportVars();
+    syncDetailsState();
+    syncSheetState();
+    if (shareIsExpired()) {
+      showExpiredView();
+    } else {
+      scheduleExpirationGate();
+      loadRecords().catch((error) => {
+        console.error(error);
+        recordList.innerHTML = '<div class="empty-state">The shared records file could not be loaded for this map.</div>';
+        listStatus.textContent = 'Unable to load records';
+      });
+    }
+  </script>
+</body>
+</html>
