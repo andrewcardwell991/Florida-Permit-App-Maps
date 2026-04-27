@@ -46,10 +46,18 @@
         "color": "#facc15"
       },
       {
-        "key": "age_0_10",
-        "label": "0-10",
-        "count": 2337,
-        "percent_of_unique_rows": 91.1,
+        "key": "age_6_10",
+        "label": "6-10",
+        "count": 886,
+        "percent_of_unique_rows": 34.5,
+        "filterable": true,
+        "color": "#22c55e"
+      },
+      {
+        "key": "age_0_5",
+        "label": "0-5",
+        "count": 1451,
+        "percent_of_unique_rows": 56.6,
         "filterable": true,
         "color": "#dbe4ee"
       },
