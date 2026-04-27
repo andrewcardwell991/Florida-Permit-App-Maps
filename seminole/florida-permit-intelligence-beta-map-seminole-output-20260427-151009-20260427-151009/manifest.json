@@ -1,0 +1,74 @@
+{
+  "display_title": "Florida Permit Intelligence Beta Map - seminole_output_20260427_151009",
+  "title": "Florida Permit Intelligence Beta Map - seminole_output_20260427_151009",
+  "subtitle": "Marker priority is driven by roof age so older roofs stand out first. Click any address in the left list to jump straight to that property and open the full map details.",
+  "county": "Seminole",
+  "map_standard_version": "2026-04-21-v1",
+  "share_expiration_days": 7,
+  "share_generated_at_utc": "2026-04-27T20:42:58Z",
+  "share_expires_at_utc": "2026-05-04T20:42:58Z",
+  "source_output_csv": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\seminole_output_20260427_151009.csv",
+  "source_output_html": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\seminole_map_20260427_151009.html",
+  "rows_in_output": 1404,
+  "unique_rows": 1404,
+  "markers_shown": 1399,
+  "generated_at_utc": "2026-04-27T20:42:58Z",
+  "expires_at_utc": "2026-05-04T20:42:58Z",
+  "map_details": {
+    "rows_in_output": 1404,
+    "unique_rows": 1404,
+    "markers_shown": 1399,
+    "duplicates_hidden": 0,
+    "errors_hidden": 5,
+    "categories": [
+      {
+        "key": "age_21_plus",
+        "label": "21+",
+        "count": 69,
+        "percent_of_unique_rows": 4.9,
+        "filterable": true,
+        "color": "#dc2626"
+      },
+      {
+        "key": "age_16_20",
+        "label": "16-20",
+        "count": 48,
+        "percent_of_unique_rows": 3.4,
+        "filterable": true,
+        "color": "#fb923c"
+      },
+      {
+        "key": "age_11_15",
+        "label": "11-15",
+        "count": 99,
+        "percent_of_unique_rows": 7.1,
+        "filterable": true,
+        "color": "#facc15"
+      },
+      {
+        "key": "age_0_10",
+        "label": "0-10",
+        "count": 1169,
+        "percent_of_unique_rows": 83.3,
+        "filterable": true,
+        "color": "#dbe4ee"
+      },
+      {
+        "key": "no_data",
+        "label": "NO DATA",
+        "count": 14,
+        "percent_of_unique_rows": 1.0,
+        "filterable": true,
+        "color": "#1f2937"
+      },
+      {
+        "key": "errors",
+        "label": "ERROR hidden",
+        "count": 5,
+        "percent_of_unique_rows": 0.4,
+        "filterable": false,
+        "color": "#475569"
+      }
+    ]
+  }
+}
