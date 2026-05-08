@@ -5,15 +5,15 @@
   "county": "Orange",
   "map_standard_version": "2026-04-21-v1",
   "share_expiration_days": 90,
-  "share_generated_at_utc": "2026-05-08T15:49:01Z",
-  "share_expires_at_utc": "2026-08-06T15:49:01Z",
+  "share_generated_at_utc": "2026-05-08T16:15:02Z",
+  "share_expires_at_utc": "2026-08-06T16:15:02Z",
   "source_output_csv": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\orange_output_20260508_113012.csv",
   "source_output_html": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\orange_map_20260508_113012.html",
   "rows_in_output": 1871,
   "unique_rows": 1871,
   "markers_shown": 1683,
-  "generated_at_utc": "2026-05-08T15:49:01Z",
-  "expires_at_utc": "2026-08-06T15:49:01Z",
+  "generated_at_utc": "2026-05-08T16:15:02Z",
+  "expires_at_utc": "2026-08-06T16:15:02Z",
   "map_details": {
     "rows_in_output": 1871,
     "unique_rows": 1871,
@@ -78,17 +78,5 @@
         "color": "#475569"
       }
     ]
-  },
-  "share_publish_status": "failed",
-  "share_slug": "north-shore-country-club-20260508-113012",
-  "share_url": "",
-  "share_visibility": "public",
-  "map_build_origin": "county_run",
-  "source_input_path": "C:\\Users\\andre\\Downloads\\combined_parcels.xlsx",
-  "output_profile_id": "legacy_roofing_minimal",
-  "output_manifest_path": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\orange_output_20260508_113012.csv.output_manifest.json",
-  "permit_findings_jsonl_path": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\orange_output_20260508_113012.csv.permit_findings.jsonl",
-  "permit_findings_csv_path": "",
-  "permit_finding_count": 20294,
-  "property_result_count": 1871
+  }
 }
