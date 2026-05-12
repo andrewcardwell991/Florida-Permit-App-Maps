@@ -1,19 +1,19 @@
 {
-  "display_title": "North Shore Country Club",
-  "title": "North Shore Country Club",
+  "display_title": "5/12 Storm Oviedo",
+  "title": "5/12 Storm Oviedo",
   "subtitle": "Marker priority is driven by roof age so older roofs stand out first. Click any address in the left list to jump straight to that property and open the full map details.",
   "county": "Seminole",
   "map_standard_version": "2026-04-21-v1",
-  "share_expiration_days": 90,
+  "share_expiration_days": 180,
   "share_generated_at_utc": "2026-05-12T18:08:13Z",
-  "share_expires_at_utc": "2026-08-10T18:08:13Z",
+  "share_expires_at_utc": "2026-11-08T18:08:13Z",
   "source_output_csv": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\seminole_output_20260512_130528.csv",
   "source_output_html": "C:\\Users\\andre\\OneDrive\\Documents\\PermitApp\\repo\\data\\outputs\\seminole_map_20260512_130528.html",
   "rows_in_output": 5949,
   "unique_rows": 4692,
   "markers_shown": 4674,
   "generated_at_utc": "2026-05-12T18:08:13Z",
-  "expires_at_utc": "2026-08-10T18:08:13Z",
+  "expires_at_utc": "2026-11-08T18:08:13Z",
   "map_details": {
     "rows_in_output": 5949,
     "unique_rows": 4692,
@@ -86,5 +86,11 @@
         "color": "#475569"
       }
     ]
-  }
+  },
+  "share_publish_status": "not_published",
+  "share_slug": "5-12-storm-oviedo-20260512-130528",
+  "share_url": "",
+  "share_visibility": "public",
+  "map_build_origin": "county_run",
+  "source_input_path": "C:\\Users\\andre\\Downloads\\combined_features_unique.xlsx"
 }
