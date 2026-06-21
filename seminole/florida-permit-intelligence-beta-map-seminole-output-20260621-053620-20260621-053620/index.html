@@ -4,11 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="map-standard-version" content="2026-04-21-v1" />
-  <meta name="display-title" content="Eric Ocoee Neighborhood" />
+  <meta name="display-title" content="Florida Permit Intelligence Beta Map - seminole_output_20260621_053620" />
   <meta name="share-expiration-days" content="30" />
-  <meta name="share-generated-at-utc" content="2026-04-28T17:54:35Z" />
-  <meta name="share-expires-at-utc" content="2026-05-28T17:54:35Z" />
-  <title>Eric Ocoee Neighborhood</title>
+  <meta name="share-generated-at-utc" content="2026-06-21T09:38:33Z" />
+  <meta name="share-expires-at-utc" content="2026-07-21T09:38:33Z" />
+  <title>Florida Permit Intelligence Beta Map - seminole_output_20260621_053620</title>
   <link rel="stylesheet" href="assets/leaflet/leaflet.css" />
   <link rel="stylesheet" href="assets/markercluster/MarkerCluster.css" />
   <style>
@@ -83,6 +83,7 @@
     body.expired-mode #map,
     body.expired-mode .sidebar,
     body.expired-mode .floating-toggle,
+    body.expired-mode .location-controls,
     body.expired-mode .location-toggle,
     body.expired-mode .location-status {
       display: none !important;
@@ -197,11 +198,18 @@
       pointer-events: none;
       transform: translateY(18px);
     }
-    .location-toggle {
+    .location-controls {
       position: absolute;
       right: max(14px, env(safe-area-inset-right));
       bottom: calc(112px + env(safe-area-inset-bottom));
       z-index: 940;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .location-toggle {
+      min-width: 118px;
       min-height: 46px;
       padding: 0 16px;
       border-radius: 999px;
@@ -213,6 +221,11 @@
       cursor: pointer;
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
+    }
+    .follow-toggle {
+      min-width: 108px;
+      min-height: 40px;
+      font-size: 12px;
     }
     .location-toggle:hover {
       border-color: rgba(126, 231, 181, 0.62);
@@ -799,7 +812,7 @@
       .floating-toggle {
         display: none;
       }
-      .location-toggle {
+      .location-controls {
         right: 18px;
         bottom: 18px;
       }
@@ -934,7 +947,7 @@
       .record-list {
         padding: 10px 12px calc(76px + env(safe-area-inset-bottom));
       }
-      .location-toggle {
+      .location-controls {
         bottom: calc(96px + env(safe-area-inset-bottom));
       }
       .location-status {
@@ -947,17 +960,20 @@
   <div class="app">
     <div id="map"></div>
     <button id="details-toggle" class="floating-toggle topbar-toggle" type="button" aria-expanded="false">Map details</button>
-    <button id="location-toggle" class="location-toggle" type="button" aria-pressed="false">My location</button>
+    <div class="location-controls" aria-label="Location controls">
+      <button id="location-toggle" class="location-toggle" type="button" aria-pressed="false">My location</button>
+      <button id="location-follow-toggle" class="location-toggle follow-toggle" type="button" aria-pressed="false">Follow off</button>
+    </div>
     <div id="location-status" class="location-status" role="status" aria-live="polite"></div>
     <button id="sheet-toggle" class="floating-toggle sheet-toggle" type="button">Show addresses</button>
     <section id="expired-shell" class="expired-shell">
       <p class="expired-eyebrow">Public Map Link Expired</p>
-      <h1 id="expired-title">Eric Ocoee Neighborhood</h1>
+      <h1 id="expired-title">Florida Permit Intelligence Beta Map - seminole_output_20260621_053620</h1>
       <p class="expired-copy">This public map link has expired and is no longer available for public viewing. The owner can republish the map from the desktop app if it still needs to be shared.</p>
       <div class="expired-grid">
         <div class="expired-card">
           <span class="expired-card-label">County</span>
-          <span id="expired-county" class="expired-card-value">Orange</span>
+          <span id="expired-county" class="expired-card-value">Seminole</span>
         </div>
         <div class="expired-card">
           <span class="expired-card-label">Generated</span>
@@ -980,7 +996,7 @@
         <div class="panel-header">
           <div class="panel-title-wrap">
             <p class="eyebrow">Florida Permit Intelligence Beta</p>
-            <h1 id="map-display-title">Eric Ocoee Neighborhood</h1>
+            <h1 id="map-display-title">Florida Permit Intelligence Beta Map - seminole_output_20260621_053620</h1>
             <p class="subtitle">Marker priority is driven by roof age so older roofs stand out first. Click any address in the left list to jump straight to that property and open the full map details.</p>
           </div>
           <button id="desktop-details-toggle" class="desktop-toggle" type="button" aria-expanded="true" aria-label="Collapse map details">▾</button>
@@ -992,16 +1008,16 @@
               <span class="detail-inline-note">Percent of unique rows</span>
             </div>
             <div class="detail-grid">
-              <div class="detail-card"><span class="label">Rows in output</span><span class="value">954</span></div><div class="detail-card"><span class="label">Unique rows</span><span class="value">954</span></div><div class="detail-card"><span class="label">Markers shown</span><span class="value">954</span></div><div class="detail-card"><span class="label">Duplicates hidden</span><span class="value">0</span></div><div class="detail-card"><span class="label">Errors hidden</span><span class="value">0</span></div>
+              <div class="detail-card"><span class="label">Rows in output</span><span class="value">85</span></div><div class="detail-card"><span class="label">Unique rows</span><span class="value">85</span></div><div class="detail-card"><span class="label">Markers shown</span><span class="value">85</span></div><div class="detail-card"><span class="label">Duplicates hidden</span><span class="value">0</span></div><div class="detail-card"><span class="label">Errors hidden</span><span class="value">0</span></div>
             </div>
           </div>
           <div class="detail-section">
             <div class="detail-section-title">
               <span>Row outcomes</span>
-              <span class="detail-inline-note">Orange</span>
+              <span class="detail-inline-note">Seminole</span>
             </div>
             <div class="detail-breakdown">
-              <div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#dc2626;"></span><span class="detail-label">21+</span></span><span class="detail-count">1</span><span class="detail-percent">0.1%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#fb923c;"></span><span class="detail-label">16-20</span></span><span class="detail-count">0</span><span class="detail-percent">0.0%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#facc15;"></span><span class="detail-label">11-15</span></span><span class="detail-count">92</span><span class="detail-percent">9.6%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#dbe4ee;"></span><span class="detail-label">0-10</span></span><span class="detail-count">763</span><span class="detail-percent">80.0%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#1f2937;"></span><span class="detail-label">NO DATA</span></span><span class="detail-count">98</span><span class="detail-percent">10.3%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#475569;"></span><span class="detail-label">ERROR hidden</span></span><span class="detail-count">0</span><span class="detail-percent">0.0%</span></div>
+              <div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#dc2626;"></span><span class="detail-label">21+</span></span><span class="detail-count">2</span><span class="detail-percent">2.4%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#fb923c;"></span><span class="detail-label">16-20</span></span><span class="detail-count">7</span><span class="detail-percent">8.2%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#facc15;"></span><span class="detail-label">11-15</span></span><span class="detail-count">16</span><span class="detail-percent">18.8%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#86efac;"></span><span class="detail-label">5-10</span></span><span class="detail-count">26</span><span class="detail-percent">30.6%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#dbe4ee;"></span><span class="detail-label">0-5</span></span><span class="detail-count">32</span><span class="detail-percent">37.6%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#475569;"></span><span class="detail-label">History found, no roof</span></span><span class="detail-count">2</span><span class="detail-percent">2.4%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#1f2937;"></span><span class="detail-label">NO DATA</span></span><span class="detail-count">2</span><span class="detail-percent">2.4%</span></div><div class="detail-row"><span class="detail-row-copy"><span class="detail-dot" style="background:#475569;"></span><span class="detail-label">ERROR hidden</span></span><span class="detail-count">0</span><span class="detail-percent">0.0%</span></div>
             </div>
             <div class="detail-note">The filter chips in the property panel are the only clickable category controls. ERROR hidden stays counted but never plots as a pin. Public link expires after 30 day(s).</div>
           </div>
@@ -1042,11 +1058,11 @@
   <script src="assets/markercluster/leaflet.markercluster.js"></script>
   <script>
     const MAP_STANDARD_VERSION = "2026-04-21-v1";
-    const MAP_DETAILS = {"rows_in_output": 954, "unique_rows": 954, "markers_shown": 954, "duplicates_hidden": 0, "errors_hidden": 0, "categories": [{"key": "age_21_plus", "label": "21+", "count": 1, "percent_of_unique_rows": 0.1, "filterable": true, "color": "#dc2626"}, {"key": "age_16_20", "label": "16-20", "count": 0, "percent_of_unique_rows": 0.0, "filterable": true, "color": "#fb923c"}, {"key": "age_11_15", "label": "11-15", "count": 92, "percent_of_unique_rows": 9.6, "filterable": true, "color": "#facc15"}, {"key": "age_0_10", "label": "0-10", "count": 763, "percent_of_unique_rows": 80.0, "filterable": true, "color": "#dbe4ee"}, {"key": "no_data", "label": "NO DATA", "count": 98, "percent_of_unique_rows": 10.3, "filterable": true, "color": "#1f2937"}, {"key": "errors", "label": "ERROR hidden", "count": 0, "percent_of_unique_rows": 0.0, "filterable": false, "color": "#475569"}]};
+    const MAP_DETAILS = {"rows_in_output": 85, "unique_rows": 85, "markers_shown": 85, "duplicates_hidden": 0, "errors_hidden": 0, "categories": [{"key": "age_21_plus", "label": "21+", "count": 2, "percent_of_unique_rows": 2.4, "filterable": true, "color": "#dc2626"}, {"key": "age_16_20", "label": "16-20", "count": 7, "percent_of_unique_rows": 8.2, "filterable": true, "color": "#fb923c"}, {"key": "age_11_15", "label": "11-15", "count": 16, "percent_of_unique_rows": 18.8, "filterable": true, "color": "#facc15"}, {"key": "age_5_10", "label": "5-10", "count": 26, "percent_of_unique_rows": 30.6, "filterable": true, "color": "#86efac"}, {"key": "age_0_5", "label": "0-5", "count": 32, "percent_of_unique_rows": 37.6, "filterable": true, "color": "#dbe4ee"}, {"key": "permit_history_found_no_roof", "label": "History found, no roof", "count": 2, "percent_of_unique_rows": 2.4, "filterable": true, "color": "#475569"}, {"key": "no_data", "label": "NO DATA", "count": 2, "percent_of_unique_rows": 2.4, "filterable": true, "color": "#1f2937"}, {"key": "errors", "label": "ERROR hidden", "count": 0, "percent_of_unique_rows": 0.0, "filterable": false, "color": "#475569"}]};
     const DEFAULT_CENTER = [28.35, -81.45];
     const SHARE_EXPIRATION_DAYS = 30;
-    const SHARE_GENERATED_AT_UTC = "2026-04-28T17:54:35Z";
-    const SHARE_EXPIRES_AT_UTC = "2026-05-28T17:54:35Z";
+    const SHARE_GENERATED_AT_UTC = "2026-06-21T09:38:33Z";
+    const SHARE_EXPIRES_AT_UTC = "2026-07-21T09:38:33Z";
     const detailsPanel = document.getElementById('details-panel');
     const detailsBody = document.getElementById('details-body');
     const detailsToggle = document.getElementById('details-toggle');
@@ -1057,6 +1073,7 @@
     const sheetClose = document.getElementById('sheet-close');
     const desktopSheetToggle = document.getElementById('desktop-sheet-toggle');
     const locationToggle = document.getElementById('location-toggle');
+    const locationFollowToggle = document.getElementById('location-follow-toggle');
     const locationStatus = document.getElementById('location-status');
     const filterRow = document.getElementById('filter-row');
     const recordList = document.getElementById('record-list');
@@ -1071,11 +1088,15 @@
       age_21_plus: { label: '21+ years', bg: '#dc2626', border: '#991b1b', text: '#ffffff', symbol: '&#10084;', size: 30, priority: true },
       age_16_20: { label: '16-20 years', bg: '#fb923c', border: '#ea580c', text: '#431407', symbol: '', size: 22, priority: true },
       age_11_15: { label: '11-15 years', bg: '#facc15', border: '#ca8a04', text: '#422006', symbol: '', size: 20, priority: true },
-      age_0_10: { label: '0-10 years', bg: '#dbe4ee', border: '#64748b', text: '#334155', symbol: '', size: 10, priority: false },
+      age_5_10: { label: '5-10 years', bg: '#86efac', border: '#16a34a', text: '#052e16', symbol: '', size: 16, priority: false },
+      age_0_5: { label: '0-5 years', bg: '#dbe4ee', border: '#64748b', text: '#334155', symbol: '', size: 10, priority: false },
+      original_inferred: { label: 'Original inferred', bg: '#334155', border: '#0f172a', text: '#ffffff', symbol: 'i', size: 16, priority: false },
+      permit_history_found_no_roof: { label: 'History found, no roof', bg: '#475569', border: '#1e293b', text: '#ffffff', symbol: 'H', size: 15, priority: false },
+      permit_history_unknown: { label: 'Permit history unknown', bg: '#64748b', border: '#334155', text: '#ffffff', symbol: '!', size: 14, priority: false },
       age_unknown: { label: 'Age not calculated', bg: '#e2e8f0', border: '#64748b', text: '#334155', symbol: '!', size: 14, priority: false },
       no_data: { label: 'No data', bg: '#1f2937', border: '#0f172a', text: '#ffffff', symbol: '?', size: 14, priority: false },
     };
-    const LOW_PRIORITY_GROUPS = new Set(['age_0_10', 'age_unknown', 'no_data']);
+    const LOW_PRIORITY_GROUPS = new Set(['age_5_10', 'age_0_5', 'age_unknown', 'no_data', 'original_inferred', 'permit_history_found_no_roof', 'permit_history_unknown']);
     const FILTER_OPTIONS = [
       { key: 'all', label: 'All', count: MAP_DETAILS.markers_shown, color: '#7ee7b5' },
       ...MAP_DETAILS.categories
@@ -1101,6 +1122,9 @@
     let userAccuracyCircle = null;
     let userLocationStatusTimer = null;
     let shouldFollowLocation = false;
+    let pendingLocationCenter = false;
+    let locationMoveInProgress = false;
+    let locationMoveGuardTimer = null;
 
     function isDesktopLayout() {
       return window.innerWidth >= 1025;
@@ -1149,8 +1173,8 @@
 
     function showExpiredView() {
       document.body.classList.add('expired-mode');
-      expiredTitle.textContent = "Eric Ocoee Neighborhood";
-      expiredCounty.textContent = "Orange";
+      expiredTitle.textContent = "Florida Permit Intelligence Beta Map - seminole_output_20260621_053620";
+      expiredCounty.textContent = "Seminole";
       expiredGenerated.textContent = formatLocalDate(SHARE_GENERATED_AT_UTC);
       expiredDate.textContent = formatLocalDate(SHARE_EXPIRES_AT_UTC);
       expiredDays.textContent = `${SHARE_EXPIRATION_DAYS} day(s)`;
@@ -1173,7 +1197,7 @@
     }
 
     function markerStyle(record) {
-      return MARKER_STYLES[record.marker_group] || MARKER_STYLES.age_0_10;
+      return MARKER_STYLES[record.marker_group] || MARKER_STYLES.age_0_5;
     }
 
     function setLocationStatus(message, persist) {
@@ -1202,6 +1226,60 @@
       });
     }
 
+    function syncLocationButtons() {
+      const hasLocation = Boolean(userLocationMarker);
+      locationToggle.classList.toggle('active', hasLocation);
+      locationToggle.setAttribute('aria-pressed', hasLocation ? 'true' : 'false');
+      locationToggle.textContent = hasLocation ? 'Location on' : (locationWatchId === null ? 'My location' : 'Locating...');
+      locationFollowToggle.classList.toggle('active', shouldFollowLocation);
+      locationFollowToggle.setAttribute('aria-pressed', shouldFollowLocation ? 'true' : 'false');
+      locationFollowToggle.textContent = shouldFollowLocation ? 'Following' : 'Follow off';
+    }
+
+    function centerMapOnUserLocation(latLng, message) {
+      if (!latLng) {
+        return;
+      }
+      locationMoveInProgress = true;
+      if (locationMoveGuardTimer) {
+        window.clearTimeout(locationMoveGuardTimer);
+        locationMoveGuardTimer = null;
+      }
+      map.once('moveend', () => {
+        locationMoveInProgress = false;
+        if (locationMoveGuardTimer) {
+          window.clearTimeout(locationMoveGuardTimer);
+          locationMoveGuardTimer = null;
+        }
+      });
+      locationMoveGuardTimer = window.setTimeout(() => {
+        locationMoveInProgress = false;
+        locationMoveGuardTimer = null;
+      }, 1600);
+      map.setView(latLng, Math.max(map.getZoom(), 17), { animate: true });
+      if (message) {
+        setLocationStatus(message, false);
+      }
+    }
+
+    function disableLocationFollow(message) {
+      if (!shouldFollowLocation) {
+        return;
+      }
+      shouldFollowLocation = false;
+      syncLocationButtons();
+      if (message) {
+        setLocationStatus(message, false);
+      }
+    }
+
+    function handleManualMapMove() {
+      if (locationMoveInProgress) {
+        return;
+      }
+      disableLocationFollow('Follow off. Move freely; tap Follow to resume.');
+    }
+
     function updateUserLocation(position) {
       const coords = position && position.coords ? position.coords : null;
       if (!coords || !Number.isFinite(coords.latitude) || !Number.isFinite(coords.longitude)) {
@@ -1209,6 +1287,7 @@
       }
       const latLng = [coords.latitude, coords.longitude];
       const accuracy = Number.isFinite(coords.accuracy) ? Math.max(coords.accuracy, 8) : 25;
+      const hadLocation = Boolean(userLocationMarker);
       if (!userLocationMarker) {
         userLocationMarker = L.marker(latLng, {
           icon: userLocationIcon(),
@@ -1232,42 +1311,66 @@
         userAccuracyCircle.setRadius(accuracy);
       }
       userLocationMarker.bindPopup(`Your location<br><span style="color:#a4bbc1;">Accuracy about ${Math.round(accuracy)} m.</span>`);
-      locationToggle.classList.add('active');
-      locationToggle.setAttribute('aria-pressed', 'true');
-      locationToggle.textContent = 'Following';
-      setLocationStatus(`Location shown. Accuracy about ${Math.round(accuracy)}.`, false);
-      if (shouldFollowLocation) {
-        map.setView(latLng, Math.max(map.getZoom(), 17), { animate: true });
+      syncLocationButtons();
+      const accuracyMessage = `Accuracy about ${Math.round(accuracy)} m.`;
+      if (pendingLocationCenter || shouldFollowLocation) {
+        const message = shouldFollowLocation ? `Following your location. ${accuracyMessage}` : `Location shown. ${accuracyMessage}`;
+        pendingLocationCenter = false;
+        centerMapOnUserLocation(latLng, message);
+      } else if (!hadLocation) {
+        setLocationStatus(`Location shown. ${accuracyMessage}`, false);
       }
     }
 
     function handleLocationError(error) {
       shouldFollowLocation = false;
-      locationToggle.classList.remove('active');
-      locationToggle.setAttribute('aria-pressed', 'false');
-      locationToggle.textContent = 'My location';
+      pendingLocationCenter = false;
+      syncLocationButtons();
       const denied = error && error.code === 1;
       setLocationStatus(denied ? 'Location permission was denied.' : 'Location is unavailable right now.', true);
     }
 
-    function startLocationWatch() {
+    function ensureLocationWatch(options) {
+      const opts = options || {};
       if (!navigator.geolocation) {
+        shouldFollowLocation = false;
+        pendingLocationCenter = false;
+        syncLocationButtons();
         setLocationStatus('This browser does not support location.', true);
         return;
       }
-      shouldFollowLocation = true;
-      locationToggle.textContent = 'Locating...';
-      setLocationStatus('Asking for your location...', true);
+      if (opts.centerAfterFix) {
+        pendingLocationCenter = true;
+      }
       if (locationWatchId === null) {
+        syncLocationButtons();
+        setLocationStatus('Asking for your location...', true);
         locationWatchId = navigator.geolocation.watchPosition(updateUserLocation, handleLocationError, {
           enableHighAccuracy: true,
           maximumAge: 10000,
           timeout: 15000,
         });
       } else if (userLocationMarker) {
-        map.setView(userLocationMarker.getLatLng(), Math.max(map.getZoom(), 17), { animate: true });
-        setLocationStatus('Recentered on your location.', false);
+        pendingLocationCenter = false;
+        centerMapOnUserLocation(userLocationMarker.getLatLng(), 'Recentered on your location.');
+      } else {
+        syncLocationButtons();
+        setLocationStatus('Waiting for your location...', true);
       }
+    }
+
+    function showUserLocation() {
+      ensureLocationWatch({ centerAfterFix: true });
+    }
+
+    function toggleLocationFollow() {
+      if (shouldFollowLocation) {
+        disableLocationFollow('Follow off. Move freely; tap Follow to resume.');
+        return;
+      }
+      shouldFollowLocation = true;
+      syncLocationButtons();
+      ensureLocationWatch({ centerAfterFix: true });
     }
 
     function isTouchDevice() {
@@ -1502,6 +1605,8 @@
       fadeAnimation: false,
       markerZoomAnimation: false,
     }).setView(DEFAULT_CENTER, 10);
+    map.on('dragstart', handleManualMapMove);
+    map.on('zoomstart', handleManualMapMove);
 
     const imageryOptions = {
       maxZoom: 20,
@@ -1615,7 +1720,11 @@
     });
 
     locationToggle.addEventListener('click', () => {
-      startLocationWatch();
+      showUserLocation();
+    });
+
+    locationFollowToggle.addEventListener('click', () => {
+      toggleLocationFollow();
     });
 
     desktopDetailsToggle.addEventListener('click', () => {
