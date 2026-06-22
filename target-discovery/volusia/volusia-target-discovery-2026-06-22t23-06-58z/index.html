@@ -1,0 +1,1605 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Target Discovery Prototype Map</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/dark/main.css" />
+  <script src="https://js.arcgis.com/4.30/"></script>
+  <style>
+    :root {
+      --bg: #061014;
+      --panel: rgba(6, 16, 20, 0.93);
+      --panel2: rgba(12, 29, 36, 0.94);
+      --border: #1f4654;
+      --text: #f4fbf7;
+      --muted: #a7bdc5;
+      --accent: #16a085;
+      --accent2: #89f8bd;
+      --warn: #f6c84f;
+      --bad: #f05d5e;
+    }
+    html, body, #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", sans-serif;
+    }
+    .panel {
+      position: absolute;
+      z-index: 12;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 18px 54px rgba(0,0,0,0.36);
+      backdrop-filter: blur(12px);
+    }
+    #toolbar {
+      top: 16px;
+      left: 16px;
+      width: min(760px, calc(100vw - 32px));
+      padding: 14px;
+    }
+    #preview {
+      top: 16px;
+      right: 16px;
+      width: 430px;
+      max-width: calc(100vw - 32px);
+      max-height: calc(100vh - 32px);
+      overflow: auto;
+      padding: 14px;
+    }
+    h1, h2 {
+      margin: 0;
+      line-height: 1.15;
+    }
+    h1 {
+      font-size: 20px;
+      color: var(--accent2);
+      letter-spacing: 0.02em;
+    }
+    h2 {
+      font-size: 15px;
+      margin-top: 12px;
+    }
+    p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+      align-items: center;
+    }
+    button, input, select {
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px;
+      background: #102129;
+      color: var(--text);
+      padding: 9px 12px;
+      font: inherit;
+      font-size: 13px;
+    }
+    button {
+      cursor: pointer;
+      font-weight: 700;
+    }
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    button.active {
+      outline: 2px solid var(--accent2);
+      color: var(--accent2);
+    }
+    input.search {
+      flex: 1;
+      min-width: 260px;
+    }
+    input.small {
+      width: 96px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: #102129;
+      border: 1px solid rgba(255,255,255,0.1);
+      user-select: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .chip input {
+      width: auto;
+      margin: 0;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .stat {
+      background: var(--panel2);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 10px;
+    }
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .stat strong {
+      display: block;
+      font-size: 22px;
+      margin-top: 4px;
+    }
+    #rows {
+      margin-top: 12px;
+      display: grid;
+      gap: 8px;
+    }
+    .record {
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 14px;
+      background: rgba(11, 26, 33, 0.94);
+      padding: 10px;
+      font-size: 12px;
+    }
+    .record.excluded {
+      border-color: rgba(240, 93, 94, 0.45);
+      opacity: 0.8;
+    }
+    .record.review {
+      border-color: rgba(246, 200, 79, 0.5);
+    }
+    .record strong {
+      color: var(--text);
+      display: block;
+      font-size: 13px;
+    }
+    .record small {
+      color: var(--muted);
+    }
+    textarea {
+      width: 100%;
+      min-height: 170px;
+      background: #071014;
+      color: #c8f7db;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      font-family: Consolas, monospace;
+      font-size: 11px;
+      box-sizing: border-box;
+    }
+    #status {
+      color: var(--accent2);
+      font-weight: 700;
+    }
+    .muted {
+      color: var(--muted);
+    }
+    body.expired button,
+    body.expired input,
+    body.expired select {
+      opacity: 0.55;
+    }
+    body.expired #preview {
+      border-color: rgba(240, 93, 94, 0.65);
+    }
+    @media (max-width: 900px) {
+      #toolbar, #preview {
+        left: 10px;
+        right: 10px;
+        width: auto;
+      }
+      #preview {
+        top: auto;
+        bottom: 10px;
+        max-height: 42vh;
+      }
+    }
+  </style>
+
+  <script id="target-discovery-invite-manifest" type="application/json">
+{"artifact_type": "target_discovery_invite", "browser_csv_export_enabled": false, "browser_export_mode": "minimal_handoff", "browser_exports": ["target_batch_json"], "county": "Volusia", "display_title": "Volusia Target Discovery", "expiration_days": 30, "expires_at_utc": "2026-07-22T23:06:58Z", "generated_at_utc": "2026-06-22T23:06:58Z", "index_file": "index.html", "invite_name": "", "invite_slug": "volusia-target-discovery-2026-06-22t23-06-58z", "notes": ["Hosted Target Discovery invite links choose parcel IDs only.", "Permit truth remains in the desktop PermitApp county runner.", "Returned JSON must be imported and rehydrated by the desktop app before any runner CSV is written."], "parcel_source": {"county": "Volusia", "county_code": 74, "layer_name": "FDOR statewide cadastral parcels", "layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0", "name": "Volusia County property appraiser parcel data via FDOR cadastral", "query_fields": ["PARCEL_ID", "OBJECTID", "CO_NO", "ALT_KEY", "OWN_NAME", "PHY_ADDR1", "PHY_ADDR2", "PHY_CITY", "PHY_ZIPCD", "DOR_UC", "PA_UC", "DISTR_CD", "ACT_YR_BLT", "EFF_YR_BLT", "NO_BULDNG", "NO_RES_UNT"], "query_layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Parcel_Centroid_Version/FeatureServer/0", "source_note": "Florida statewide cadastral parcels from county property appraiser submissions."}, "schema_version": "target_discovery_invite_v1", "share_expiration_days": 30, "share_expires_at_utc": "2026-07-22T23:06:58Z", "share_generated_at_utc": "2026-06-22T23:06:58Z", "share_namespace": "target-discovery", "share_path_hint": "target-discovery/volusia/volusia-target-discovery-2026-06-22t23-06-58z/", "share_visibility": "public", "site_type": "target_discovery_invite", "target_batch_schema_version": "target_batch_v1", "target_discovery_share_version": "2026-06-22-v1"}
+  </script>
+  <script>
+    window.TARGET_DISCOVERY_INVITE_MANIFEST = JSON.parse(
+      document.getElementById("target-discovery-invite-manifest").textContent
+    );
+  </script>
+</head>
+<body>
+  <div id="viewDiv"></div>
+  <section id="toolbar" class="panel">
+    <h1>Target Discovery Prototype</h1>
+    <p><strong>Map chooses parcels. PermitApp runners decide permit truth.</strong> Prototype only; roofing remains the only active beta permit category.</p>
+    <p id="sourceText"></p>
+    <p id="expiryText"></p>
+    <div class="row">
+      <input id="searchText" class="search" placeholder="Search parcel ID, alternate key, owner, or address" />
+      <button id="searchParcel" class="primary">Search parcel</button>
+    </div>
+    <div class="row">
+      <button id="rectangle" class="primary">Rectangle</button>
+      <button id="circle">Circle</button>
+      <button id="freehand">Freehand</button>
+      <button id="clickSelect">Click select</button>
+      <button id="clear">Clear</button>
+    </div>
+    <div class="row">
+      <label class="muted">Buffer</label>
+      <input id="bufferValue" class="small" type="number" value="0.25" step="0.05" min="0" />
+      <select id="bufferUnit">
+        <option value="miles">miles</option>
+        <option value="kilometers">kilometers</option>
+        <option value="feet">feet</option>
+        <option value="meters">meters</option>
+      </select>
+      <label class="muted">District</label>
+      <input id="district" class="small" placeholder="optional" />
+      <button id="applyDistrict">Apply district/filter</button>
+    </div>
+    <h2>Source-backed parcel filters</h2>
+    <div class="row" id="filters"></div>
+    <h2>Focus area</h2>
+    <div class="row">
+      <input id="focusName" class="search" placeholder="Name this selected parcel area" />
+      <button id="saveFocusArea">Save focus area</button>
+      <select id="focusAreaSelect" class="search"></select>
+      <button id="loadFocusArea">Load</button>
+      <button id="deleteFocusArea">Delete</button>
+    </div>
+    <p id="status">Draw, click, or search parcels to build a real TargetBatch preview.</p>
+  </section>
+  <section id="preview" class="panel">
+    <h1>TargetBatch Preview</h1>
+    <div class="stats">
+      <div class="stat"><span>Candidates</span><strong id="candidateCount">0</strong></div>
+      <div class="stat"><span>Runner ready</span><strong id="includedCount">0</strong></div>
+      <div class="stat"><span>Review</span><strong id="reviewCount">0</strong></div>
+      <div class="stat"><span>Excluded</span><strong id="excludedCount">0</strong></div>
+    </div>
+    <div class="row">
+      <button id="confirmSelection" class="primary">Confirm selection</button>
+      <button id="downloadJson">Download TargetBatch JSON</button>
+      <button id="copyBatch">Copy TargetBatch</button>
+    </div>
+    <h2>Runner-ready parcels</h2>
+    <div id="runnerRows"></div>
+    <h2>Needs-review parcels</h2>
+    <div id="reviewRows"></div>
+    <h2>Excluded parcels</h2>
+    <div id="excludedRows"></div>
+    <h2>Audit JSON</h2>
+    <textarea id="audit" readonly></textarea>
+  </section>
+  <script>
+    window.TARGET_DISCOVERY_CONFIG = {"county": "Volusia", "source": {"county": "Volusia", "county_code": 74, "name": "Volusia County property appraiser parcel data via FDOR cadastral", "layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0", "query_layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Parcel_Centroid_Version/FeatureServer/0", "layer_name": "FDOR statewide cadastral parcels", "source_note": "Florida statewide cadastral parcels from county property appraiser submissions.", "query_fields": ["PARCEL_ID", "OBJECTID", "CO_NO", "ALT_KEY", "OWN_NAME", "PHY_ADDR1", "PHY_ADDR2", "PHY_CITY", "PHY_ZIPCD", "DOR_UC", "PA_UC", "DISTR_CD", "ACT_YR_BLT", "EFF_YR_BLT", "NO_BULDNG", "NO_RES_UNT"]}, "all_counties": {"Orange": {"county": "Orange", "county_code": 58, "name": "Orange County property appraiser parcel data via FDOR cadastral", "layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0", "query_layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Parcel_Centroid_Version/FeatureServer/0", "layer_name": "FDOR statewide cadastral parcels", "source_note": "Florida statewide cadastral parcels from county property appraiser submissions.", "query_fields": ["PARCEL_ID", "OBJECTID", "CO_NO", "ALT_KEY", "OWN_NAME", "PHY_ADDR1", "PHY_ADDR2", "PHY_CITY", "PHY_ZIPCD", "DOR_UC", "PA_UC", "DISTR_CD", "ACT_YR_BLT", "EFF_YR_BLT", "NO_BULDNG", "NO_RES_UNT"]}, "Osceola": {"county": "Osceola", "county_code": 59, "name": "Osceola County property appraiser parcel data via FDOR cadastral", "layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0", "query_layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Parcel_Centroid_Version/FeatureServer/0", "layer_name": "FDOR statewide cadastral parcels", "source_note": "Florida statewide cadastral parcels from county property appraiser submissions.", "query_fields": ["PARCEL_ID", "OBJECTID", "CO_NO", "ALT_KEY", "OWN_NAME", "PHY_ADDR1", "PHY_ADDR2", "PHY_CITY", "PHY_ZIPCD", "DOR_UC", "PA_UC", "DISTR_CD", "ACT_YR_BLT", "EFF_YR_BLT", "NO_BULDNG", "NO_RES_UNT"]}, "Seminole": {"county": "Seminole", "county_code": 69, "name": "Seminole County property appraiser parcel data via FDOR cadastral", "layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0", "query_layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Parcel_Centroid_Version/FeatureServer/0", "layer_name": "FDOR statewide cadastral parcels", "source_note": "Florida statewide cadastral parcels from county property appraiser submissions.", "query_fields": ["PARCEL_ID", "OBJECTID", "CO_NO", "ALT_KEY", "OWN_NAME", "PHY_ADDR1", "PHY_ADDR2", "PHY_CITY", "PHY_ZIPCD", "DOR_UC", "PA_UC", "DISTR_CD", "ACT_YR_BLT", "EFF_YR_BLT", "NO_BULDNG", "NO_RES_UNT"]}, "Volusia": {"county": "Volusia", "county_code": 74, "name": "Volusia County property appraiser parcel data via FDOR cadastral", "layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0", "query_layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Parcel_Centroid_Version/FeatureServer/0", "layer_name": "FDOR statewide cadastral parcels", "source_note": "Florida statewide cadastral parcels from county property appraiser submissions.", "query_fields": ["PARCEL_ID", "OBJECTID", "CO_NO", "ALT_KEY", "OWN_NAME", "PHY_ADDR1", "PHY_ADDR2", "PHY_CITY", "PHY_ZIPCD", "DOR_UC", "PA_UC", "DISTR_CD", "ACT_YR_BLT", "EFF_YR_BLT", "NO_BULDNG", "NO_RES_UNT"]}}, "export_mode": "minimal_handoff", "invite_manifest": {"schema_version": "target_discovery_invite_v1", "artifact_type": "target_discovery_invite", "site_type": "target_discovery_invite", "target_discovery_share_version": "2026-06-22-v1", "target_batch_schema_version": "target_batch_v1", "display_title": "Volusia Target Discovery", "county": "Volusia", "invite_slug": "volusia-target-discovery-2026-06-22t23-06-58z", "invite_name": "", "share_namespace": "target-discovery", "share_path_hint": "target-discovery/volusia/volusia-target-discovery-2026-06-22t23-06-58z/", "share_visibility": "public", "share_expiration_days": 30, "share_generated_at_utc": "2026-06-22T23:06:58Z", "share_expires_at_utc": "2026-07-22T23:06:58Z", "generated_at_utc": "2026-06-22T23:06:58Z", "expires_at_utc": "2026-07-22T23:06:58Z", "expiration_days": 30, "parcel_source": {"county": "Volusia", "county_code": 74, "name": "Volusia County property appraiser parcel data via FDOR cadastral", "layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0", "query_layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Parcel_Centroid_Version/FeatureServer/0", "layer_name": "FDOR statewide cadastral parcels", "source_note": "Florida statewide cadastral parcels from county property appraiser submissions.", "query_fields": ["PARCEL_ID", "OBJECTID", "CO_NO", "ALT_KEY", "OWN_NAME", "PHY_ADDR1", "PHY_ADDR2", "PHY_CITY", "PHY_ZIPCD", "DOR_UC", "PA_UC", "DISTR_CD", "ACT_YR_BLT", "EFF_YR_BLT", "NO_BULDNG", "NO_RES_UNT"]}, "index_file": "index.html", "browser_exports": ["target_batch_json"], "browser_csv_export_enabled": false, "browser_export_mode": "minimal_handoff", "notes": ["Hosted Target Discovery invite links choose parcel IDs only.", "Permit truth remains in the desktop PermitApp county runner.", "Returned JSON must be imported and rehydrated by the desktop app before any runner CSV is written."]}};
+  </script>
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/FeatureLayer",
+      "esri/layers/GraphicsLayer",
+      "esri/widgets/Sketch/SketchViewModel",
+      "esri/Graphic",
+      "esri/geometry/geometryEngine",
+      "esri/geometry/support/webMercatorUtils"
+    ], function(Map, MapView, FeatureLayer, GraphicsLayer, SketchViewModel, Graphic, geometryEngine, webMercatorUtils) {
+      const config = window.TARGET_DISCOVERY_CONFIG;
+      const source = config.source;
+      const inviteManifest = config.invite_manifest || config.manifest || {};
+      const exportMode = String(config.export_mode || inviteManifest.export_mode || "full_audit").toLowerCase();
+      const minimalHandoffMode = exportMode === "minimal_handoff";
+      const expiresAtUtc = inviteManifest.share_expires_at_utc || inviteManifest.expires_at_utc || inviteManifest.expires_at || config.expires_at_utc || "";
+      const countyCenters = {
+        Orange: [-81.38, 28.54],
+        Osceola: [-81.35, 28.25],
+        Seminole: [-81.27, 28.72],
+        Volusia: [-81.12, 29.05]
+      };
+      const filterDefs = [
+        ["single_family", "Single-family", ["01"]],
+        ["townhouse", "Townhouse (local subtype evidence required)", []],
+        ["condo", "Condo", ["04"]],
+        ["duplex", "Duplex", ["08"]],
+        ["mobile_home", "Mobile/trailer", ["02"]],
+        ["multifamily", "Apartment/multifamily", ["03"]],
+        ["vacant", "Vacant land/lot", ["00"]],
+        ["agricultural", "Agricultural/farm", ["50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69"]],
+        ["commercial", "Commercial", ["10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39"]],
+        ["government", "Government/institutional", ["70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99"]],
+        ["unknown", "Unknown / needs review", []]
+      ];
+      const labels = Object.fromEntries(filterDefs.map(([key, label]) => [key, label]));
+      const enabled = new Set(["single_family", "townhouse", "condo", "duplex", "unknown"]);
+      const addressSuffixes = {
+        AVENUE: ["AVENUE", "AVE"],
+        BOULEVARD: ["BOULEVARD", "BLVD"],
+        CIRCLE: ["CIRCLE", "CIR"],
+        COURT: ["COURT", "CT"],
+        DRIVE: ["DRIVE", "DR"],
+        LANE: ["LANE", "LN"],
+        PARKWAY: ["PARKWAY", "PKWY"],
+        PLACE: ["PLACE", "PL"],
+        ROAD: ["ROAD", "RD"],
+        STREET: ["STREET", "ST"],
+        TERRACE: ["TERRACE", "TER"],
+        TRAIL: ["TRAIL", "TRL"],
+        WAY: ["WAY"]
+      };
+      let clickSelect = false;
+      let selected = [];
+      let selectionGraphic = null;
+      let lastSelectionMode = "map_select";
+      let lastSelectionGeometryPayload = null;
+      let lastQueryWhere = "";
+      let lastObjectIdCount = 0;
+      let lastResultLimit = 5000;
+      let lastResultLimitReached = false;
+      let activeFocusAreaId = "";
+      let activeFocusAreaName = "";
+      let selectionConfirmedAt = "";
+      const focusStorageKey = `permitapp_target_focus_areas_${config.county.toLowerCase()}`;
+
+      const displayTitle = inviteManifest.display_title || `Target Discovery Prototype Map - ${config.county}`;
+      document.title = displayTitle;
+      document.querySelector("#toolbar h1").textContent = minimalHandoffMode ? "Target Discovery" : "Target Discovery Prototype";
+      document.getElementById("sourceText").textContent = `${source.name} | ${source.layer_name} | County code ${source.county_code}`;
+      if (minimalHandoffMode) {
+        document.getElementById("downloadJson").textContent = "Download handoff JSON";
+        document.getElementById("copyBatch").textContent = "Copy handoff JSON";
+        document.getElementById("audit").setAttribute("aria-label", "Minimal Target Discovery handoff JSON");
+      }
+      renderExpirationStatus();
+      const filterHost = document.getElementById("filters");
+      filterDefs.forEach(([key, label]) => {
+        const chip = document.createElement("label");
+        chip.className = "chip";
+        chip.innerHTML = `<input type="checkbox" data-key="${key}" ${enabled.has(key) ? "checked" : ""}> ${label}`;
+        filterHost.appendChild(chip);
+      });
+      filterHost.addEventListener("change", () => {
+        markSelectionDirty();
+        renderPreview();
+      });
+
+      const parcelLayer = new FeatureLayer({
+        url: source.layer_url,
+        outFields: source.query_fields,
+        title: source.layer_name,
+        definitionExpression: `CO_NO = ${source.county_code}`,
+        opacity: 0.38,
+        renderer: {
+          type: "simple",
+          symbol: {
+            type: "simple-fill",
+            color: [22, 160, 133, 0.05],
+            outline: { color: [137, 248, 189, 0.65], width: 0.7 }
+          }
+        }
+      });
+      const parcelQueryLayer = new FeatureLayer({
+        url: source.query_layer_url || source.layer_url,
+        outFields: source.query_fields,
+        title: `${source.layer_name} centroids`,
+        definitionExpression: `CO_NO = ${source.county_code}`
+      });
+      const drawLayer = new GraphicsLayer();
+      const selectionLayer = new GraphicsLayer();
+      const pointLayer = new GraphicsLayer();
+      const map = new Map({
+        basemap: "hybrid",
+        layers: [parcelLayer, drawLayer, selectionLayer, pointLayer]
+      });
+      const view = new MapView({
+        container: "viewDiv",
+        map,
+        center: countyCenters[config.county] || [-81.5, 28.5],
+        zoom: 14
+      });
+      const sketch = new SketchViewModel({
+        view,
+        layer: drawLayer,
+        polygonSymbol: {
+          type: "simple-fill",
+          color: [246, 200, 79, 0.12],
+          outline: { color: [246, 200, 79, 1], width: 3 }
+        }
+      });
+      sketch.on("create", (event) => {
+        if (event.state === "complete") {
+          clickSelect = false;
+          setActiveButton(null);
+          selectByGeometry(event.graphic.geometry, { append: false, mode: "map_select" });
+        }
+      });
+      view.on("click", async (event) => {
+        if (!clickSelect || !ensureNotExpired()) return;
+        const append = Boolean(event.native && (event.native.ctrlKey || event.native.shiftKey || event.native.metaKey));
+        await selectClickedParcel(event, append);
+      });
+
+      document.getElementById("rectangle").onclick = () => startSketch("rectangle");
+      document.getElementById("circle").onclick = () => startSketch("circle");
+      document.getElementById("freehand").onclick = () => startSketch("polygon", "freehand");
+      document.getElementById("clickSelect").onclick = () => {
+        if (!ensureNotExpired()) return;
+        clickSelect = true;
+        setActiveButton("clickSelect");
+        setStatus("Click one parcel dot/outline. Hold Ctrl or Shift to add more parcels.");
+      };
+      document.getElementById("searchParcel").onclick = searchParcels;
+      document.getElementById("searchText").addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && ensureNotExpired()) searchParcels();
+      });
+      document.getElementById("clear").onclick = () => {
+        if (!ensureNotExpired()) return;
+        drawLayer.removeAll();
+        selectionLayer.removeAll();
+        pointLayer.removeAll();
+        selected = [];
+        markSelectionDirty();
+        activeFocusAreaId = "";
+        activeFocusAreaName = "";
+        document.getElementById("focusName").value = "";
+        selectionGraphic = null;
+        lastSelectionGeometryPayload = null;
+        renderPreview();
+        setStatus("Selection cleared.");
+      };
+      document.getElementById("applyDistrict").onclick = refreshFromCurrentSelection;
+      document.getElementById("bufferValue").onchange = refreshFromCurrentSelection;
+      document.getElementById("bufferUnit").onchange = refreshFromCurrentSelection;
+      document.getElementById("confirmSelection").onclick = confirmSelection;
+      document.getElementById("saveFocusArea").onclick = saveFocusArea;
+      document.getElementById("loadFocusArea").onclick = loadFocusArea;
+      document.getElementById("deleteFocusArea").onclick = deleteFocusArea;
+      document.getElementById("downloadJson").onclick = downloadJson;
+      document.getElementById("copyBatch").onclick = () => {
+        if (!ensureNotExpired()) return;
+        navigator.clipboard.writeText(document.getElementById("audit").value);
+        setStatus(minimalHandoffMode ? "Target Discovery handoff JSON copied." : "TargetBatch JSON copied.");
+      };
+
+      function startSketch(type, mode) {
+        if (!ensureNotExpired()) return;
+        clickSelect = false;
+        drawLayer.removeAll();
+        selectionLayer.removeAll();
+        pointLayer.removeAll();
+        selected = [];
+        markSelectionDirty();
+        activeFocusAreaId = "";
+        activeFocusAreaName = "";
+        selectionGraphic = null;
+        lastSelectionGeometryPayload = null;
+        setActiveButton(type === "rectangle" ? "rectangle" : type === "circle" ? "circle" : mode === "freehand" ? "freehand" : null);
+        sketch.create(type, mode ? { mode } : undefined);
+        setStatus(`Draw a ${mode || type} selection on the satellite parcel map.`);
+      }
+
+      function setActiveButton(id) {
+        ["rectangle", "circle", "freehand", "clickSelect"].forEach((buttonId) => {
+          document.getElementById(buttonId).classList.toggle("active", buttonId === id);
+        });
+      }
+
+      function setStatus(message) {
+        document.getElementById("status").textContent = message;
+      }
+
+      function inviteExpiresAt() {
+        if (!expiresAtUtc) return null;
+        const parsed = Date.parse(expiresAtUtc);
+        return Number.isFinite(parsed) ? new Date(parsed) : null;
+      }
+
+      function inviteExpired() {
+        const expiresAt = inviteExpiresAt();
+        return Boolean(expiresAt && Date.now() > expiresAt.getTime());
+      }
+
+      function expirationMessage() {
+        const expiresAt = inviteExpiresAt();
+        if (!expiresAt) return "";
+        const formatted = expiresAt.toLocaleString();
+        return inviteExpired()
+          ? `This Target Discovery invite expired on ${formatted}. Ask for a fresh link before exporting parcels.`
+          : `This Target Discovery invite expires on ${formatted}.`;
+      }
+
+      function renderExpirationStatus() {
+        const message = expirationMessage();
+        const host = document.getElementById("expiryText");
+        host.textContent = message;
+        host.style.color = inviteExpired() ? "var(--bad)" : "var(--warn)";
+        if (!inviteExpired()) return;
+        document.body.classList.add("expired");
+        ["searchText", "searchParcel", "rectangle", "circle", "freehand", "clickSelect", "clear", "bufferValue", "bufferUnit", "district", "applyDistrict", "filters", "focusName", "saveFocusArea", "loadFocusArea", "deleteFocusArea", "confirmSelection", "downloadJson", "copyBatch"].forEach((id) => {
+          const element = document.getElementById(id);
+          if (!element) return;
+          if (id === "filters") {
+            element.querySelectorAll("input").forEach((input) => { input.disabled = true; });
+          } else {
+            element.disabled = true;
+          }
+        });
+        setStatus(message);
+      }
+
+      function ensureNotExpired() {
+        if (!inviteExpired()) return true;
+        renderExpirationStatus();
+        return false;
+      }
+
+      function markSelectionDirty() {
+        selectionConfirmedAt = "";
+      }
+
+      function rowKey(row) {
+        const attrs = row.attributes || row;
+        return attrs.PARCEL_ID || attrs.ALT_KEY || attrs.parcel_id || attrs.alternate_key || String(attrs.OBJECTID || "");
+      }
+
+      function focusAreas() {
+        try {
+          return JSON.parse(localStorage.getItem(focusStorageKey) || "[]");
+        } catch (_error) {
+          return [];
+        }
+      }
+
+      function saveFocusAreas(items) {
+        localStorage.setItem(focusStorageKey, JSON.stringify(items));
+      }
+
+      function refreshFocusAreaSelect() {
+        const select = document.getElementById("focusAreaSelect");
+        const items = focusAreas();
+        select.innerHTML = "";
+        const empty = document.createElement("option");
+        empty.value = "";
+        empty.textContent = items.length ? "Saved focus areas" : "No saved focus areas";
+        select.appendChild(empty);
+        items.forEach((item) => {
+          const option = document.createElement("option");
+          option.value = item.id;
+          option.textContent = item.name;
+          select.appendChild(option);
+        });
+      }
+
+      function serializeSelectedRows() {
+        return selected.map((row) => {
+          const attrs = row.attributes || row;
+          const geometry = row.geometry && row.geometry.toJSON ? row.geometry.toJSON() : row.geometry || null;
+          return { attributes: attrs, geometry, mode: row.mode || lastSelectionMode };
+        });
+      }
+
+      function saveFocusArea() {
+        const name = document.getElementById("focusName").value.trim();
+        if (!name) {
+          setStatus("Name the focus area before saving it.");
+          return;
+        }
+        if (!selected.length) {
+          setStatus("Select parcels before saving a focus area.");
+          return;
+        }
+        const id = activeFocusAreaId || `focus_${Date.now()}`;
+        activeFocusAreaId = id;
+        activeFocusAreaName = name;
+        const targets = normalizedTargets();
+        const item = {
+          id,
+          name,
+          county: config.county,
+          saved_at: new Date().toISOString(),
+          selected_rows: serializeSelectedRows(),
+          target_batch: buildTargetBatch(targets),
+          search_text: document.getElementById("searchText").value.trim(),
+          district_filter: document.getElementById("district").value.trim(),
+          buffer_value: document.getElementById("bufferValue").value,
+          buffer_unit: document.getElementById("bufferUnit").value,
+          filter_keys: [...activeFilterKeys()],
+          selection_mode: lastSelectionMode,
+          selection_geometry: lastSelectionGeometryPayload,
+          query_where: lastQueryWhere,
+          result_object_id_count: lastObjectIdCount,
+          result_limit: lastResultLimit,
+          result_limit_reached: lastResultLimitReached,
+          selection_confirmed_at: selectionConfirmedAt
+        };
+        const items = focusAreas().filter((existing) => existing.id !== id);
+        items.unshift(item);
+        saveFocusAreas(items.slice(0, 50));
+        refreshFocusAreaSelect();
+        document.getElementById("focusAreaSelect").value = id;
+        renderPreview();
+        setStatus(`Saved focus area "${name}" locally in this browser.`);
+      }
+
+      function loadFocusArea() {
+        const id = document.getElementById("focusAreaSelect").value;
+        const item = focusAreas().find((existing) => existing.id === id);
+        if (!item) {
+          setStatus("Choose a saved focus area to load.");
+          return;
+        }
+        activeFocusAreaId = item.id;
+        activeFocusAreaName = item.name;
+        selected = item.selected_rows || [];
+        lastSelectionMode = item.selection_mode || "map_select";
+        lastSelectionGeometryPayload = item.selection_geometry || null;
+        lastQueryWhere = item.query_where || "";
+        lastObjectIdCount = Number(item.result_object_id_count || 0);
+        lastResultLimit = Number(item.result_limit || 5000);
+        lastResultLimitReached = Boolean(item.result_limit_reached);
+        selectionConfirmedAt = item.selection_confirmed_at || "";
+        document.getElementById("focusName").value = item.name || "";
+        document.getElementById("searchText").value = item.search_text || "";
+        document.getElementById("district").value = item.district_filter || "";
+        document.getElementById("bufferValue").value = item.buffer_value || "0.25";
+        document.getElementById("bufferUnit").value = item.buffer_unit || "miles";
+        const keys = new Set(item.filter_keys || []);
+        document.querySelectorAll("#filters input").forEach((input) => {
+          input.checked = keys.has(input.dataset.key);
+        });
+        drawSelectedPoints();
+        renderPreview();
+        setStatus(`Loaded focus area "${item.name}". Re-run the query if you need fresh parcel-source data.`);
+      }
+
+      function deleteFocusArea() {
+        const id = document.getElementById("focusAreaSelect").value;
+        if (!id) {
+          setStatus("Choose a saved focus area to delete.");
+          return;
+        }
+        const items = focusAreas().filter((existing) => existing.id !== id);
+        saveFocusAreas(items);
+        if (activeFocusAreaId === id) {
+          activeFocusAreaId = "";
+          activeFocusAreaName = "";
+          document.getElementById("focusName").value = "";
+        }
+        refreshFocusAreaSelect();
+        renderPreview();
+        setStatus("Deleted the saved focus area from this browser.");
+      }
+
+      function confirmSelection() {
+        if (!ensureNotExpired()) return;
+        const runnable = runnerTargets();
+        if (!selected.length) {
+          setStatus("Select parcels before confirming the target list.");
+          return;
+        }
+        selectionConfirmedAt = new Date().toISOString();
+        renderPreview();
+        if (!runnable.length) {
+          setStatus("Selection confirmed, but 0 parcels are runner-ready with the current filters. Adjust filters before writing runner CSV if needed.");
+          return;
+        }
+        setStatus(`Selection confirmed with ${runnable.length} runner-ready parcel(s). Permit lookup remains separate from map selection.`);
+      }
+
+      function escapeSql(value) {
+        return String(value ?? "").replace(/'/g, "''").toUpperCase();
+      }
+
+      function looksLikeParcelKey(value) {
+        const text = String(value || "").trim();
+        const digitCount = (text.match(/\d/g) || []).length;
+        return digitCount >= 6 || text.includes("-");
+      }
+
+      function exactKeyWhere(value) {
+        const safe = String(value || "").trim().replace(/'/g, "''");
+        const clauses = scopedClauses();
+        clauses.push(`(PARCEL_ID = '${safe}' OR ALT_KEY = '${safe}')`);
+        return clauses.join(" AND ");
+      }
+
+      function normalizedAddressWhere(value) {
+        const parts = addressSearchParts(value);
+        if (!parts.houseNumber && !parts.tokens.length) return buildBaseWhere(value);
+        const clauses = scopedClauses();
+        if (parts.houseNumber) clauses.push(`(PHY_ADDR1 LIKE '${parts.houseNumber}%' OR PHY_ADDR1 LIKE '% ${parts.houseNumber}%')`);
+        addressTokenClauses(parts.tokens, { strictSuffix: true, maxTokens: 4 }).forEach((clause) => clauses.push(clause));
+        return clauses.join(" AND ");
+      }
+
+      function looseAddressWhere(value) {
+        const parts = addressSearchParts(value);
+        if (!parts.houseNumber && !parts.tokens.length) return buildBaseWhere(value);
+        const clauses = scopedClauses();
+        if (parts.houseNumber) clauses.push(`(PHY_ADDR1 LIKE '${parts.houseNumber}%' OR PHY_ADDR1 LIKE '% ${parts.houseNumber}%')`);
+        addressTokenClauses(parts.tokens, { strictSuffix: false, maxTokens: 3 }).forEach((clause) => clauses.push(clause));
+        return clauses.join(" AND ");
+      }
+
+      function scopedClauses() {
+        const district = document.getElementById("district").value.trim();
+        if (district) {
+          if (!/^\d+$/.test(district)) {
+            throw new Error("District must be numeric for FDOR parcel queries.");
+          }
+          return [`CO_NO = ${source.county_code}`, `DISTR_CD = ${Number(district)}`];
+        }
+        return [`CO_NO = ${source.county_code}`];
+      }
+
+      function addressSearchParts(value) {
+        const text = String(value || "").toUpperCase().replace(/[.,#]/g, " ").replace(/\s+/g, " ").trim();
+        const words = text.split(" ").filter(Boolean);
+        let houseNumber = "";
+        if (words.length && /^\d+[A-Z]?$/.test(words[0])) {
+          houseNumber = escapeSql(words.shift());
+        }
+        const ignored = new Set(["APT", "APARTMENT", "UNIT", "STE", "SUITE", "FL", "FLOOR", "N", "S", "E", "W", "NE", "NW", "SE", "SW"]);
+        const tokens = words
+          .map((token) => token.replace(/[^A-Z0-9]/g, ""))
+          .filter((token) => token && !ignored.has(token));
+        return { houseNumber, tokens };
+      }
+
+      function addressTokenClauses(tokens, options = {}) {
+        const strictSuffix = Boolean(options.strictSuffix);
+        const maxTokens = Number(options.maxTokens || 3);
+        const suffixTokens = new Set(Object.values(addressSuffixes).flat());
+        const clauses = [];
+        for (const token of tokens) {
+          if (!token) continue;
+          const variants = addressSuffixes[token];
+          if (variants) {
+            if (strictSuffix) {
+              clauses.push("(" + variants.map((variant) => `PHY_ADDR1 LIKE '%${escapeSql(variant)}%'`).join(" OR ") + ")");
+            }
+            break;
+          }
+          if (!strictSuffix && suffixTokens.has(token)) continue;
+          clauses.push(`PHY_ADDR1 LIKE '%${token}%'`);
+          if (clauses.length >= maxTokens) break;
+        }
+        return clauses;
+      }
+
+      function buildBaseWhere(extraSearchText = "") {
+        const clauses = scopedClauses();
+        const searchText = extraSearchText.trim();
+        if (searchText) {
+          const safe = escapeSql(searchText);
+          const fields = ["PARCEL_ID", "ALT_KEY", "PHY_ADDR1", "PHY_ADDR2", "PHY_CITY", "OWN_NAME"];
+          clauses.push("(" + fields.map((field) => `${field} LIKE '%${safe}%'`).join(" OR ") + ")");
+        }
+        return clauses.join(" AND ");
+      }
+
+      function searchCandidateWheres(value) {
+        const candidates = [];
+        if (looksLikeParcelKey(value)) candidates.push(exactKeyWhere(value));
+        candidates.push(normalizedAddressWhere(value));
+        candidates.push(looseAddressWhere(value));
+        if (String(value || "").trim().length >= 4) candidates.push(buildBaseWhere(value));
+        return [...new Set(candidates.filter(Boolean))];
+      }
+
+      function bufferedGeometry(geometry) {
+        const value = Number(document.getElementById("bufferValue").value || "0");
+        const unit = document.getElementById("bufferUnit").value || "miles";
+        if (!value || value <= 0) return geometry;
+        return geometryEngine.geodesicBuffer(geometry, value, unit);
+      }
+
+      function refreshFromCurrentSelection() {
+        if (!ensureNotExpired()) return;
+        if (!selectionGraphic) {
+          renderPreview();
+          return;
+        }
+        selectByGeometry(selectionGraphic.geometry, { append: false, fromExisting: true, mode: lastSelectionMode });
+      }
+
+      async function searchParcels() {
+        if (!ensureNotExpired()) return;
+        const text = document.getElementById("searchText").value.trim();
+        if (!text) {
+          setStatus("Enter a parcel ID, alternate key, owner, or address first.");
+          return;
+        }
+        try {
+          lastSelectionMode = "one_property";
+          setStatus("Searching official parcel layer...");
+          let rows = [];
+          let lastSearchError = null;
+          const attemptSearch = async (where, label, limit) => {
+            try {
+              setStatus(`${label} search in official parcel layer...`);
+              return await queryRowsDirect({ where, mode: "one_property", limit });
+            } catch (error) {
+              lastSearchError = error;
+              console.warn(`${label} parcel search failed`, error);
+              return [];
+            }
+          };
+          if (looksLikeParcelKey(text)) {
+            rows = await attemptSearch(exactKeyWhere(text), "Exact parcel ID", 100);
+          }
+          if (!rows.length) {
+            rows = await searchByAddressAssist(text);
+          }
+          if (!rows.length && text.length >= 4) {
+            rows = await attemptSearch(looseAddressWhere(text), "Direct FDOR address backup", 25);
+          }
+          if (!rows.length && lastSearchError) {
+            setStatus("No official parcel matched that search. The direct FDOR text backup also timed out, so try house number + street name, exact parcel ID, click-select, or draw a rectangle.");
+          } else if (!rows.length) {
+            setStatus("No official parcel matched that search. Try house number + street name, exact parcel ID, click-select, or draw a rectangle.");
+          }
+          selected = dedupe(rows);
+          markSelectionDirty();
+          activeFocusAreaId = "";
+          activeFocusAreaName = "";
+          selectionGraphic = null;
+          lastSelectionGeometryPayload = null;
+          drawLayer.removeAll();
+          selectionLayer.removeAll();
+          drawSelectedPoints();
+          renderPreview();
+          if (selected.length) setStatus(`Search returned ${selected.length} official parcel candidate(s).`);
+          if (selected.length && selected[0].geometry) {
+            view.goTo(selected.map((row) => row.geometry)).catch(() => {});
+          }
+        } catch (error) {
+          console.error(error);
+          setStatus((error && error.message) ? `${error.message}. Try exact parcel ID or draw a rectangle around the area.` : "Parcel search failed. Try exact parcel ID or draw a rectangle around the area.");
+        }
+      }
+
+      async function searchByAddressAssist(text) {
+        setStatus("Finding address candidates, then matching them to official FDOR parcels...");
+        const candidates = await geocodeAddressCandidates(text);
+        const rows = [];
+        const candidatePoints = [];
+        for (const candidate of candidates) {
+          if (!candidate.location || !Number.isFinite(candidate.location.x) || !Number.isFinite(candidate.location.y)) continue;
+          const point = {
+            type: "point",
+            longitude: candidate.location.x,
+            latitude: candidate.location.y,
+            spatialReference: { wkid: 4326 }
+          };
+          candidatePoints.push(point);
+          const searchArea = geometryEngine.geodesicBuffer(point, 250, "feet");
+          try {
+            const nearby = await queryRows({ where: buildBaseWhere(), geometry: searchArea, mode: "one_property" });
+            rows.push(...nearby);
+            if (rows.length) break;
+          } catch (error) {
+            console.warn("Address-assist parcel match failed", error);
+          }
+        }
+        const ranked = rankRowsForSearch(dedupe(rows), text, candidatePoints);
+        const strongMatches = ranked.filter((item) => item.score >= 90).map((item) => item.row);
+        return (strongMatches.length ? strongMatches : ranked.map((item) => item.row)).slice(0, 25);
+      }
+
+      async function geocodeAddressCandidates(text) {
+        const searchText = `${text}, ${config.county} County, Florida`;
+        const center = countyCenters[config.county] || [-81.38, 28.54];
+        const params = new URLSearchParams({
+          f: "json",
+          SingleLine: searchText,
+          outFields: "Match_addr,Addr_type,Score",
+          maxLocations: "5",
+          sourceCountry: "USA",
+          forStorage: "false",
+          location: `${center[0]},${center[1]}`
+        });
+        try {
+          const data = await fetchJsonWithTimeout(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?${params}`, 8000, "Address assist timed out");
+          return (data.candidates || []).filter((candidate) => Number(candidate.score || 0) >= 70);
+        } catch (error) {
+          console.warn("Address assist failed", error);
+          return [];
+        }
+      }
+
+      function rankRowsForSearch(rows, text, candidatePoints) {
+        return rows
+          .map((row) => ({ row, score: rowSearchScore(row, text, candidatePoints) }))
+          .sort((left, right) => right.score - left.score);
+      }
+
+      function rowSearchScore(row, text, candidatePoints) {
+        const attrs = row.attributes || row;
+        const address = rowAddress(attrs).toUpperCase();
+        const parts = addressSearchParts(text);
+        const suffixTokens = new Set(Object.values(addressSuffixes).flat());
+        const usefulTokens = parts.tokens.filter((token) => !suffixTokens.has(token)).slice(0, 4);
+        let score = 0;
+        if (parts.houseNumber && address.includes(parts.houseNumber)) score += 100;
+        let matchedTokens = 0;
+        usefulTokens.forEach((token) => {
+          if (address.includes(token)) {
+            matchedTokens += 1;
+            score += 22;
+          }
+        });
+        if (usefulTokens.length && matchedTokens === usefulTokens.length) score += 35;
+        const nearest = nearestDistanceFeet(row, candidatePoints);
+        if (Number.isFinite(nearest)) score += Math.max(0, 35 - nearest / 12);
+        return score;
+      }
+
+      function nearestDistanceFeet(row, points) {
+        if (!row.geometry || !points.length) return Number.MAX_SAFE_INTEGER;
+        let nearest = Number.MAX_SAFE_INTEGER;
+        points.forEach((point) => {
+          try {
+            const distance = geometryEngine.distance(point, row.geometry, "feet");
+            if (Number.isFinite(distance)) nearest = Math.min(nearest, distance);
+          } catch (_error) {
+            // Different source references can happen if the layer changes; keep ranking safe.
+          }
+        });
+        return nearest;
+      }
+
+      async function selectClickedParcel(event, append) {
+        if (!ensureNotExpired()) return;
+        try {
+          lastSelectionMode = "map_select";
+          setStatus("Finding nearest official parcel to your click...");
+          let searchRadiusFeet = 90;
+          let rows = [];
+          while (!rows.length && searchRadiusFeet <= 260) {
+            const searchArea = geometryEngine.geodesicBuffer(event.mapPoint, searchRadiusFeet, "feet");
+            rows = await queryRows({ where: buildBaseWhere(), geometry: searchArea, mode: "map_select" });
+            if (!rows.length) searchRadiusFeet += 85;
+          }
+          if (!rows.length) {
+            throw new Error("No parcel centroid found near that click. Zoom in closer or draw a small rectangle around the parcel.");
+          }
+          const clickPoint = webMercatorUtils.webMercatorToGeographic(event.mapPoint) || event.mapPoint;
+          rows.sort((left, right) => distanceFromClick(left, clickPoint) - distanceFromClick(right, clickPoint));
+          const nearest = rows.slice(0, 1);
+          selected = append ? dedupe([...selected, ...nearest]) : dedupe(nearest);
+          markSelectionDirty();
+          activeFocusAreaId = "";
+          activeFocusAreaName = "";
+          lastSelectionGeometryPayload = geometryPayload(event.mapPoint, "point", `Clicked map point with ${searchRadiusFeet}-foot nearest-parcel search`);
+          drawSelectedPoints();
+          renderPreview();
+          setStatus(`Selected nearest parcel. Current selection has ${selected.length} parcel candidate(s).`);
+        } catch (error) {
+          console.error(error);
+          setStatus(error.message || "Click select failed. Zoom in or draw a small rectangle around the parcel.");
+        }
+      }
+
+      function distanceFromClick(row, clickPoint) {
+        try {
+          if (!row.geometry) return Number.MAX_SAFE_INTEGER;
+          const distance = geometryEngine.distance(clickPoint, row.geometry, "feet");
+          return Number.isFinite(distance) ? distance : Number.MAX_SAFE_INTEGER;
+        } catch (_error) {
+          return Number.MAX_SAFE_INTEGER;
+        }
+      }
+
+      async function selectByGeometry(geometry, options = {}) {
+        if (!ensureNotExpired()) return;
+        const append = Boolean(options.append);
+        const fromExisting = Boolean(options.fromExisting);
+        lastSelectionMode = options.mode || "map_select";
+        const queryGeometry = bufferedGeometry(geometry);
+        if (!fromExisting) {
+          selectionGraphic = new Graphic({
+            geometry,
+            symbol: {
+              type: "simple-fill",
+              color: [74, 168, 255, 0.10],
+              outline: { color: [74, 168, 255, 1], width: 3 }
+            }
+          });
+        }
+        selectionLayer.removeAll();
+        selectionLayer.add(new Graphic({
+          geometry: queryGeometry,
+          symbol: {
+            type: "simple-fill",
+            color: [22, 160, 133, 0.12],
+            outline: { color: [137, 248, 189, 1], width: 2 }
+          }
+        }));
+        lastSelectionGeometryPayload = geometryPayload(queryGeometry, "map_selection", "Browser map selection with active buffer settings");
+        try {
+          setStatus("Querying official parcel layer...");
+          const rows = await queryRows({ where: buildBaseWhere(), geometry: queryGeometry, mode: "map_select" });
+          selected = append ? dedupe([...selected, ...rows]) : dedupe(rows);
+          markSelectionDirty();
+          activeFocusAreaId = "";
+          activeFocusAreaName = "";
+          drawSelectedPoints();
+          renderPreview();
+          setStatus(`Selected ${selected.length} parcel candidate(s) from the official parcel layer.`);
+        } catch (error) {
+          console.error(error);
+          setStatus(error.message || "Parcel query failed. Check network/service availability.");
+        }
+      }
+
+      async function queryRows({ where, geometry = null, mode = "map_select", filterCountyAfterQuery = false }) {
+        const idQuery = parcelQueryLayer.createQuery();
+        idQuery.where = where;
+        lastQueryWhere = where;
+        if (geometry) {
+          idQuery.geometry = geometry;
+          idQuery.spatialRelationship = "intersects";
+        }
+        const objectIds = (await withTimeout(parcelQueryLayer.queryObjectIds(idQuery), 20000, "Official parcel selection timed out")) || [];
+        objectIds.sort((a, b) => a - b);
+        const limit = 5000;
+        const ids = objectIds.slice(0, limit);
+        lastObjectIdCount = objectIds.length;
+        lastResultLimit = limit;
+        lastResultLimitReached = objectIds.length > limit;
+        if (objectIds.length > limit) {
+          setStatus(`Selection found ${objectIds.length} parcels; preview limited to first ${limit}. Narrow the area for production use.`);
+        }
+        const chunks = [];
+        for (let index = 0; index < ids.length; index += 200) {
+          chunks.push(ids.slice(index, index + 200));
+        }
+        const rows = [];
+        for (const chunk of chunks) {
+          const query = parcelQueryLayer.createQuery();
+          query.objectIds = chunk;
+          query.outFields = source.query_fields;
+          query.returnGeometry = true;
+          query.outSpatialReference = { wkid: 4326 };
+          const result = await withTimeout(parcelQueryLayer.queryFeatures(query), 20000, "Official parcel feature fetch timed out");
+          result.features.forEach((feature) => {
+            const attrs = feature.attributes || {};
+            if (filterCountyAfterQuery && Number(attrs.CO_NO) !== Number(source.county_code)) return;
+            rows.push({ attributes: attrs, geometry: feature.geometry || null, mode });
+          });
+        }
+        return rows;
+      }
+
+      async function queryRowsDirect({ where, geometry = null, mode = "one_property", limit = 75 }) {
+        lastQueryWhere = where;
+        const query = parcelQueryLayer.createQuery();
+        query.where = where;
+        query.outFields = source.query_fields;
+        query.returnGeometry = true;
+        query.outSpatialReference = { wkid: 4326 };
+        query.num = Math.max(1, limit);
+        if (geometry) {
+          query.geometry = geometry;
+          query.spatialRelationship = "intersects";
+        }
+        let result;
+        try {
+          result = await withTimeout(parcelQueryLayer.queryFeatures(query), 12000, "Official parcel search timed out");
+        } catch (error) {
+          const detail = error && error.message ? error.message : "network/service fetch failed";
+          throw new Error(`FDOR/ArcGIS search failed: ${detail}`);
+        }
+        const rows = (result.features || []).map((feature) => ({
+          attributes: feature.attributes || {},
+          geometry: feature.geometry || null,
+          mode
+        }));
+        lastObjectIdCount = rows.length;
+        lastResultLimit = limit;
+        lastResultLimitReached = rows.length >= limit;
+        return dedupe(rows);
+      }
+
+      function withTimeout(promise, milliseconds, label) {
+        let timer = null;
+        const timeout = new Promise((_, reject) => {
+          timer = window.setTimeout(() => reject(new Error(label)), milliseconds);
+        });
+        return Promise.race([promise, timeout]).finally(() => {
+          if (timer !== null) window.clearTimeout(timer);
+        });
+      }
+
+      async function fetchJsonWithTimeout(url, milliseconds, label) {
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => controller.abort(), milliseconds);
+        try {
+          const response = await fetch(url, { signal: controller.signal });
+          if (!response.ok) throw new Error(`${label}: HTTP ${response.status}`);
+          return await response.json();
+        } catch (error) {
+          if (error && error.name === "AbortError") throw new Error(label);
+          throw error;
+        } finally {
+          window.clearTimeout(timer);
+        }
+      }
+
+      function drawSelectedPoints() {
+        pointLayer.removeAll();
+        selected.forEach((row) => {
+          if (!row.geometry) return;
+          const geometry = row.geometry.type ? row.geometry : { ...row.geometry, type: "point" };
+          pointLayer.add(new Graphic({
+            geometry,
+            symbol: {
+              type: "simple-marker",
+              style: "circle",
+              size: 9,
+              color: [22, 160, 133, 0.95],
+              outline: { color: [244, 251, 247, 0.9], width: 1.5 }
+            }
+          }));
+        });
+      }
+
+      function dedupe(rows) {
+        const seen = new Set();
+        const output = [];
+        rows.forEach((row) => {
+          const key = rowKey(row);
+          if (!key || seen.has(key)) return;
+          seen.add(key);
+          output.push(row);
+        });
+        return output;
+      }
+
+      function normalizeCode(value) {
+        if (value === null || value === undefined) return "";
+        const text = String(value).trim().replace(/\.0$/, "");
+        const digits = text.replace(/\D/g, "");
+        if (!digits) return "";
+        if (digits.length <= 2) return digits.padStart(2, "0");
+        if (digits.length === 3) {
+          if (digits.startsWith("0")) {
+            if (digits === "000") return "00";
+            const category = digits[1] === "0" ? digits.slice(-2) : digits.slice(0, 2);
+            return `${category}00`;
+          }
+          return `0${digits}`;
+        }
+        if (digits.length > 4) return digits.slice(-4);
+        return digits;
+      }
+
+      function classify(row) {
+        const attrs = row.attributes || row;
+        const dorType = classifyCode(attrs.DOR_UC);
+        if (dorType && dorType !== "vacant") return dorType;
+        const paType = classifyCode(attrs.PA_UC);
+        if (paType && paType !== "vacant") return paType;
+        if (hasSingleFamilyImprovementEvidence(attrs)) return "single_family";
+        return dorType || paType || "unknown";
+      }
+
+      function classifyCode(value) {
+        const code = normalizeCode(value);
+        if (!code) return "";
+        for (const [key, , prefixes] of filterDefs) {
+          if (prefixes.some((prefix) => code.startsWith(prefix))) return key;
+        }
+        return "unknown";
+      }
+
+      function hasSingleFamilyImprovementEvidence(attrs) {
+        const units = numberOrNull(attrs.NO_RES_UNT);
+        const buildings = numberOrNull(attrs.NO_BULDNG);
+        const yearBuilt = numberOrNull(attrs.ACT_YR_BLT) || numberOrNull(attrs.EFF_YR_BLT);
+        const address = String(attrs.PHY_ADDR1 || "").trim();
+        return units === 1 && (buildings === null || buildings === 0 || buildings === 1) && Boolean(yearBuilt) && /\d/.test(address);
+      }
+
+      function numberOrNull(value) {
+        if (value === null || value === undefined || String(value).trim() === "") return null;
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+
+      function firstPresent(...values) {
+        for (const value of values) {
+          if (value !== null && value !== undefined && String(value).trim() !== "") return value;
+        }
+        return "";
+      }
+
+      function rowAddress(attrs) {
+        return [attrs.PHY_ADDR1, attrs.PHY_ADDR2].filter(Boolean).join(" ").trim();
+      }
+
+      function activeFilterKeys() {
+        return new Set([...document.querySelectorAll("#filters input:checked")].map((input) => input.dataset.key));
+      }
+
+      function activeParcelFilterPayload() {
+        const enabledFilters = activeFilterKeys();
+        const includeTypes = [...enabledFilters].filter((key) => key !== "unknown");
+        return {
+          include_types: includeTypes,
+          exclude_types: [],
+          include_unknown: enabledFilters.has("unknown"),
+          labels
+        };
+      }
+
+      function normalizedTargets() {
+        const enabledFilters = activeFilterKeys();
+        return selected.map((row) => {
+          const type = classify(row);
+          const normalized = normalizeRow(row, type);
+          if (type === "unknown") {
+            normalized.confidence_status = "needs_review";
+            normalized.excluded_reason = "needs_review";
+            normalized.exclusion_note = `Needs review: DOR_UC ${normalizeCode((row.attributes || row).DOR_UC) || "blank"} / PA_UC ${normalizeCode((row.attributes || row).PA_UC) || "blank"} did not match a supported source-backed parcel category. This is usually a common-area, institutional, utility, or incomplete land-use record.`;
+          }
+          if (!enabledFilters.has(type)) {
+            normalized.confidence_status = "excluded";
+            normalized.excluded_reason = "parcel_type_filter";
+            normalized.exclusion_note = `${labels[type] || type} is not selected in the filter controls.`;
+          }
+          return normalized;
+        });
+      }
+
+      function runnerTargets() {
+        return normalizedTargets().filter((row) => row.confidence_status === "verified_official");
+      }
+
+      function renderPreview() {
+        const targets = normalizedTargets();
+        const runnable = targets.filter((row) => row.confidence_status === "verified_official");
+        const needsReview = targets.filter((row) => row.confidence_status === "needs_review");
+        const excluded = targets.filter((row) => row.confidence_status === "excluded");
+        document.getElementById("candidateCount").textContent = selected.length;
+        document.getElementById("includedCount").textContent = runnable.length;
+        document.getElementById("reviewCount").textContent = needsReview.length;
+        document.getElementById("excludedCount").textContent = excluded.length;
+        renderRows("runnerRows", runnable, "No runner-ready parcels yet.");
+        renderRows("reviewRows", needsReview, "No parcels need review.");
+        renderRows("excludedRows", excluded, "No parcels excluded by filters.");
+        document.getElementById("audit").value = JSON.stringify(buildExportPayload(targets), null, 2);
+        document.getElementById("confirmSelection").textContent = selectionConfirmedAt ? "Selection confirmed" : "Confirm selection";
+      }
+
+      function renderRows(hostId, rows, emptyText) {
+        const rowsHost = document.getElementById(hostId);
+        rowsHost.innerHTML = "";
+        if (!rows.length) {
+          const div = document.createElement("div");
+          div.className = "record";
+          div.innerHTML = `<small>${escapeHtml(emptyText)}</small>`;
+          rowsHost.appendChild(div);
+          return;
+        }
+        rows.slice(0, 40).forEach((row) => {
+          const div = document.createElement("div");
+          div.className = `record ${row.confidence_status === "excluded" ? "excluded" : row.confidence_status === "needs_review" ? "review" : ""}`;
+          const reason = row.exclusion_note || row.excluded_reason || row.confidence_status;
+          div.innerHTML = `<strong>${escapeHtml(row.situs_address || "No situs address")}</strong><small>${escapeHtml(row.parcel_id)} | ${escapeHtml(row.owner)} | ${escapeHtml(labels[row.residential_type] || row.residential_type)} | ${escapeHtml(reason)} | District ${escapeHtml(row.jurisdiction_hint || "")}</small>`;
+          rowsHost.appendChild(div);
+        });
+      }
+
+      function buildExportPayload(targets) {
+        return minimalHandoffMode ? buildMinimalHandoff(targets) : buildTargetBatch(targets);
+      }
+
+      function selectedIdsFromTargets(targets) {
+        return targets.map((row) => row.parcel_id || row.alternate_key).filter(Boolean);
+      }
+
+      function excludedReasonsFromRows(rows) {
+        return Object.fromEntries(
+          rows
+            .map((row) => [row.parcel_id || row.alternate_key, row.exclusion_note || row.excluded_reason || "needs_review"])
+            .filter(([parcelId]) => Boolean(parcelId))
+        );
+      }
+
+      function parcelSourcePayload() {
+        return {
+          name: source.name,
+          url: source.query_layer_url || source.layer_url,
+          layer: source.layer_name,
+          county: config.county,
+          county_code: source.county_code,
+          source_timestamp: "live FDOR ArcGIS query",
+          is_official: true,
+          notes: source.source_note || ""
+        };
+      }
+
+      function queryPayload() {
+        return {
+          query_text: document.getElementById("searchText").value.trim(),
+          district_filter: document.getElementById("district").value.trim(),
+          where: lastQueryWhere,
+          object_id_count: lastObjectIdCount,
+          result_limit: lastResultLimit,
+          result_limit_reached: lastResultLimitReached,
+          buffer_radius: Number(document.getElementById("bufferValue").value || 0) || null,
+          buffer_unit: document.getElementById("bufferUnit").value
+        };
+      }
+
+      function selectedObjectIdMapping() {
+        const mapping = {};
+        selected.forEach((row) => {
+          const attrs = row.attributes || row;
+          const parcelId = attrs.PARCEL_ID || attrs.ALT_KEY || String(attrs.OBJECTID || "");
+          const objectId = firstPresent(attrs.OBJECTID, attrs.OBJECTID_1, attrs.FID);
+          if (parcelId && objectId !== "") mapping[String(parcelId)] = objectId;
+        });
+        return mapping;
+      }
+
+      function buildMinimalHandoff(rows) {
+        const excludedRows = rows.filter((row) => row.confidence_status === "excluded");
+        const selectedIds = rows.map((row) => row.parcel_id || row.alternate_key).filter(Boolean);
+        const excludedIds = excludedRows.map((row) => row.parcel_id || row.alternate_key).filter(Boolean);
+        const focusArea = focusAreaPayload();
+        const parcelSource = parcelSourcePayload();
+        const parcelFilters = activeParcelFilterPayload();
+        const query = queryPayload();
+        const excludedReasons = excludedReasonsFromRows(excludedRows);
+        const selectedObjectIds = selectedObjectIdMapping();
+        return {
+          schema_version: "target_batch_v1",
+          handoff_type: "target_discovery_minimal",
+          county: config.county,
+          search_mode: lastSelectionMode,
+          source_type: lastSelectionMode,
+          created_at: new Date().toISOString(),
+          share_expires_at_utc: expiresAtUtc,
+          selection_confirmed_at: selectionConfirmedAt,
+          focus_area: focusArea,
+          selection_geometry: lastSelectionGeometryPayload,
+          parcel_source: parcelSource,
+          parcel_filters: parcelFilters,
+          query,
+          selected_parcel_ids: selectedIds,
+          excluded_parcel_ids: excludedIds,
+          excluded_reasons: excludedReasons,
+          selected_object_ids: selectedObjectIds,
+          selected_object_id_mapping: selectedObjectIds,
+          selection: {
+            confirmed: Boolean(selectionConfirmedAt),
+            confirmed_at: selectionConfirmedAt,
+            expires_at_utc: expiresAtUtc,
+            selected_parcel_ids: selectedIds,
+            excluded_parcel_ids: excludedIds,
+            excluded_reasons: excludedReasons,
+            selected_object_ids: selectedObjectIds,
+            selected_object_id_mapping: selectedObjectIds
+          },
+          provenance: {
+            export_tool: "browser_map_workbench_minimal_handoff_json",
+            county: config.county,
+            search_mode: lastSelectionMode,
+            focus_area_id: focusArea.id,
+            focus_area_name: focusArea.name,
+            parcel_source: parcelSource,
+            selection_confirmed_at: selectionConfirmedAt,
+            query_text: query.query_text,
+            district_filter: query.district_filter,
+            query_where: query.where,
+            selection_geometry: lastSelectionGeometryPayload,
+            selected_parcel_ids: selectedIds,
+            excluded_parcel_ids: excludedIds,
+            share_expires_at_utc: expiresAtUtc,
+            selected_object_ids: selectedObjectIds,
+            selected_object_id_mapping: selectedObjectIds,
+            object_id_count: query.object_id_count,
+            result_limit: query.result_limit,
+            result_limit_reached: query.result_limit_reached
+          },
+          notes: [
+            "Minimal hosted Target Discovery handoff. Python must rehydrate parcel details from the official source before writing a runner CSV.",
+            "Browser CSV export is disabled; this JSON intentionally omits raw parcel rows and owner/address/year-built fields."
+          ]
+        };
+      }
+
+      function buildTargetBatch(targets) {
+        const runnerRows = targets.filter((row) => row.confidence_status === "verified_official");
+        const excludedRows = targets.filter((row) => row.confidence_status === "excluded");
+        const selectedIds = selectedIdsFromTargets(targets);
+        const excludedIds = selectedIdsFromTargets(excludedRows);
+        const focusArea = focusAreaPayload();
+        const parcelSource = parcelSourcePayload();
+        const parcelFilters = activeParcelFilterPayload();
+        const query = queryPayload();
+        const excludedReasons = excludedReasonsFromRows(excludedRows);
+        return {
+          schema_version: "target_batch_v1",
+          county: config.county,
+          targets,
+          source_type: lastSelectionMode,
+          created_at: new Date().toISOString(),
+          search_profile_id: "roofing_beta",
+          search_mode: lastSelectionMode,
+          focus_area: focusArea,
+          selection: {
+            confirmed: Boolean(selectionConfirmedAt),
+            confirmed_at: selectionConfirmedAt,
+            selected_parcel_ids: selectedIds,
+            excluded_parcel_ids: excludedIds,
+            excluded_reasons: excludedReasons
+          },
+          parcel_source: parcelSource,
+          parcel_filters: parcelFilters,
+          selection_geometry: lastSelectionGeometryPayload,
+          query,
+          selected_parcel_ids: selectedIds,
+          excluded_parcel_ids: excludedIds,
+          excluded_reasons: excludedReasons,
+          provenance: {
+            search_mode: lastSelectionMode,
+            county: config.county,
+            focus_area_id: focusArea.id,
+            focus_area_name: focusArea.name,
+            parcel_source: parcelSource,
+            source_timestamp: "live FDOR ArcGIS query",
+            selection_geometry: lastSelectionGeometryPayload,
+            parcel_type_filter: parcelFilters,
+            query_text: query.query_text,
+            district_filter: query.district_filter,
+            query_where: query.where,
+            result_object_id_count: query.object_id_count,
+            result_limit: query.result_limit,
+            result_limit_reached: query.result_limit_reached,
+            selected_parcel_ids: selectedIds,
+            excluded_parcel_ids: excludedIds,
+            selection_confirmed_at: selectionConfirmedAt,
+            export_tool: "browser_map_workbench_json_only",
+            notes: [
+              `Runner-ready parcels at export time: ${runnerRows.length}`,
+              `Selection confirmed at: ${selectionConfirmedAt || "not confirmed"}`,
+              `District filter: ${document.getElementById("district").value.trim() || "none"}`,
+              `Search text: ${document.getElementById("searchText").value.trim() || "none"}`,
+              "Browser map runner CSV export is disabled; import this JSON into the desktop writer for validated CSV generation."
+            ]
+          },
+          notes: [
+            "Prototype TargetBatch generated from live FDOR ArcGIS parcel data.",
+            "Year built is metadata only and is not roof-date evidence.",
+            "Use the Python TargetBatch writer to create runner CSV and manifest artifacts."
+          ],
+          runner_input_columns: ["Parcel #", "Address", "Owner", "City", "State", "Zip"]
+        };
+      }
+
+      function focusAreaPayload() {
+        const typedName = document.getElementById("focusName").value.trim();
+        const name = activeFocusAreaName || typedName || "Unsaved map selection";
+        const id = activeFocusAreaId || `pending_${config.county.toLowerCase()}_${name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "selection"}`;
+        return { id, name };
+      }
+
+      function geometryPayload(geometry, geometryType, label) {
+        if (!geometry) return null;
+        const geographicGeometry = toGeographicGeometry(geometry);
+        const payload = {
+          geometry_type: geometryType || "map_selection",
+          center_latitude: geographicGeometry.latitude || (geographicGeometry.centroid && geographicGeometry.centroid.latitude) || null,
+          center_longitude: geographicGeometry.longitude || (geographicGeometry.centroid && geographicGeometry.centroid.longitude) || null,
+          radius_value: Number(document.getElementById("bufferValue").value || 0) || null,
+          radius_unit: document.getElementById("bufferUnit").value,
+          coordinates: [],
+          label
+        };
+        if (geographicGeometry.rings && geographicGeometry.rings.length) {
+          payload.geometry_type = "polygon";
+          payload.coordinates = geographicGeometry.rings[0].map((point) => [point[1], point[0]]);
+        } else if (geographicGeometry.extent && geographicGeometry.extent.center) {
+          payload.center_latitude = geographicGeometry.extent.center.latitude;
+          payload.center_longitude = geographicGeometry.extent.center.longitude;
+        }
+        return payload;
+      }
+
+      function toGeographicGeometry(geometry) {
+        if (!geometry || !geometry.spatialReference || geometry.spatialReference.isWGS84) return geometry;
+        if (geometry.spatialReference.isWebMercator) {
+          return webMercatorUtils.webMercatorToGeographic(geometry);
+        }
+        return geometry;
+      }
+
+      function normalizeRow(row, type) {
+        const attrs = row.attributes || row;
+        const geometry = row.geometry || {};
+        const dorCode = normalizeCode(attrs.DOR_UC);
+        const paCode = normalizeCode(attrs.PA_UC);
+        const rawUseCode = firstPresent(attrs.DOR_UC, attrs.PA_UC);
+        const selectedUseCode = normalizeCode(rawUseCode) || dorCode || paCode;
+        return {
+          county: config.county,
+          parcel_id: attrs.PARCEL_ID || attrs.ALT_KEY || String(attrs.OBJECTID || ""),
+          alternate_key: attrs.ALT_KEY || "",
+          situs_address: rowAddress(attrs),
+          city: attrs.PHY_CITY || "",
+          state: "FL",
+          zip_code: firstPresent(attrs.PHY_ZIPCD) ? String(firstPresent(attrs.PHY_ZIPCD)).replace(/\.0$/, "") : "",
+          owner: attrs.OWN_NAME || "",
+          latitude: geometry.latitude || geometry.y || null,
+          longitude: geometry.longitude || geometry.x || null,
+          geometry_source: source.layer_name,
+          property_use_code: selectedUseCode,
+          property_use_description: `DOR_UC ${dorCode} / PA_UC ${paCode}`,
+          residential_type: type,
+          building_count: firstPresent(attrs.NO_BULDNG) || null,
+          unit_count: firstPresent(attrs.NO_RES_UNT) || null,
+          year_built: firstPresent(attrs.ACT_YR_BLT, attrs.EFF_YR_BLT) || null,
+          jurisdiction_hint: firstPresent(attrs.DISTR_CD) ? String(firstPresent(attrs.DISTR_CD)).replace(/\.0$/, "") : "",
+          source_name: source.name,
+          source_timestamp: "live FDOR ArcGIS query",
+          confidence_status: "verified_official",
+          excluded_reason: "",
+          exclusion_note: "",
+          source_row: attrs
+        };
+      }
+
+      function escapeHtml(value) {
+        return String(value || "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char]));
+      }
+
+      function downloadJson() {
+        if (!ensureNotExpired()) return;
+        const prefix = minimalHandoffMode ? "target_discovery_handoff" : "target_batch";
+        downloadText(document.getElementById("audit").value, `${prefix}_${config.county.toLowerCase()}_map_preview.json`, "application/json;charset=utf-8");
+      }
+
+      function downloadText(text, filename, type) {
+        const blob = new Blob([text], { type });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }
+
+      view.when(() => {
+        refreshFocusAreaSelect();
+        renderPreview();
+        if (inviteExpired()) {
+          renderExpirationStatus();
+        } else {
+          setStatus("Satellite map ready. Draw, click, or search to query live FDOR parcel data.");
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+{
+  "schema_version": "target_discovery_invite_v1",
+  "artifact_type": "target_discovery_invite",
+  "site_type": "target_discovery_invite",
+  "target_discovery_share_version": "2026-06-22-v1",
+  "target_batch_schema_version": "target_batch_v1",
+  "display_title": "Volusia Target Discovery",
+  "county": "Volusia",
+  "invite_slug": "volusia-target-discovery-2026-06-22t23-06-58z",
+  "invite_name": "",
+  "share_namespace": "target-discovery",
+  "share_path_hint": "target-discovery/volusia/volusia-target-discovery-2026-06-22t23-06-58z/",
+  "share_visibility": "public",
+  "share_expiration_days": 30,
+  "share_generated_at_utc": "2026-06-22T23:06:58Z",
+  "share_expires_at_utc": "2026-07-22T23:06:58Z",
+  "generated_at_utc": "2026-06-22T23:06:58Z",
+  "expires_at_utc": "2026-07-22T23:06:58Z",
+  "expiration_days": 30,
+  "parcel_source": {
+    "county": "Volusia",
+    "county_code": 74,
+    "name": "Volusia County property appraiser parcel data via FDOR cadastral",
+    "layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0",
+    "query_layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Parcel_Centroid_Version/FeatureServer/0",
+    "layer_name": "FDOR statewide cadastral parcels",
+    "source_note": "Florida statewide cadastral parcels from county property appraiser submissions.",
+    "query_fields": [
+      "PARCEL_ID",
+      "OBJECTID",
+      "CO_NO",
+      "ALT_KEY",
+      "OWN_NAME",
+      "PHY_ADDR1",
+      "PHY_ADDR2",
+      "PHY_CITY",
+      "PHY_ZIPCD",
+      "DOR_UC",
+      "PA_UC",
+      "DISTR_CD",
+      "ACT_YR_BLT",
+      "EFF_YR_BLT",
+      "NO_BULDNG",
+      "NO_RES_UNT"
+    ]
+  },
+  "index_file": "index.html",
+  "browser_exports": [
+    "target_batch_json"
+  ],
+  "browser_csv_export_enabled": false,
+  "browser_export_mode": "minimal_handoff",
+  "notes": [
+    "Hosted Target Discovery invite links choose parcel IDs only.",
+    "Permit truth remains in the desktop PermitApp county runner.",
+    "Returned JSON must be imported and rehydrated by the desktop app before any runner CSV is written."
+  ]
+}
